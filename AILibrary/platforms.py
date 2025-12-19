@@ -31,6 +31,7 @@ class Platforms(Enum):
         "api_key_required": False,
         "supports_vision": True
     }
+
     DockerModel = {
         "default_model": "ai/qwen3-vl:8B-Q8_K_XL",
         "default_base_url": "http://localhost:12434/engines/v1",
@@ -38,9 +39,30 @@ class Platforms(Enum):
         "supports_vision": True
     }
 
+    OpenAI = {
+        "default_model": "gpt-5.2",
+        "default_base_url": "https://api.openai.com/v1",
+        "api_key_required": True,
+        "supports_vision": True
+    }
+
     Perplexity = {
         "default_model": "sonar-pro",
         "default_base_url": "https://api.perplexity.ai",
+        "api_key_required": True,
+        "supports_vision": True
+    }
+
+    Gemini = {
+        "default_model": "gemini-2.5-flash",
+        "default_base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "api_key_required": True,
+        "supports_vision": True
+    }
+
+    Manual = {
+        "default_model": None,
+        "default_base_url": None,
         "api_key_required": True,
         "supports_vision": True
     }
