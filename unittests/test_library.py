@@ -30,15 +30,15 @@ from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError
 
 # Import the class under test - adjust the import path as needed
-from VisualLibrary import VisualLibrary
+from AILibrary import AILibrary
 
 
-class TestVisualLibrary:
+class TestAILibrary:
 
     @pytest.fixture
     def mock_genai(self):
         """Fixture to create a mock GenAI instance"""
-        with patch('VisualLibrary.genai.GenAI') as mock_genai_class:
+        with patch('AILibrary.genai.GenAI') as mock_genai_class:
             mock_genai_instance = mock_genai_class.return_value
             mock_genai_instance.generate_ai_response.return_value = "AI Response"
             mock_genai_instance.extract_result_and_explanation_from_response.return_value = ("pass", "Test passed")
@@ -46,9 +46,9 @@ class TestVisualLibrary:
 
     @pytest.fixture
     def library(self, mock_genai):
-        """Fixture to create a VisualLibrary instance with mocked dependencies"""
-        with patch('VisualLibrary.library._get_rf_output_dir', return_value='/mock/output/dir'):
-            lib = VisualLibrary(api_key="test")
+        """Fixture to create a AILibrary instance with mocked dependencies"""
+        with patch('AILibrary.library._get_rf_output_dir', return_value='/mock/output/dir'):
+            lib = AILibrary(api_key="test")
             yield lib
 
     @pytest.fixture
@@ -64,13 +64,13 @@ class TestVisualLibrary:
     @pytest.fixture
     def mock_logger(self):
         """Fixture to mock robot.api.logger"""
-        with patch('VisualLibrary.library.logger') as mock_logger:
+        with patch('AILibrary.library.logger') as mock_logger:
             yield mock_logger
 
     def test_init(self, mock_genai):
-        """Test the initialization of VisualLibrary"""
-        with patch('VisualLibrary.library._get_rf_output_dir', return_value='/mock/output/dir'):
-            lib = VisualLibrary(
+        """Test the initialization of AILibrary"""
+        with patch('AILibrary.library._get_rf_output_dir', return_value='/mock/output/dir'):
+            lib = AILibrary(
                 api_key="test_key",
                 base_url="http://test.com",
                 model="test_model",
@@ -80,7 +80,7 @@ class TestVisualLibrary:
             )
 
             # Verify GenAI was initialized with the correct parameters
-            from VisualLibrary.genai import GenAI
+            from AILibrary.genai import GenAI
             GenAI.assert_called_once_with(
                 base_url="http://test.com",
                 api_key="test_key",
@@ -92,7 +92,7 @@ class TestVisualLibrary:
 
     def test_verify_that_single_path(self, library, mock_genai, mock_logger):
         """Test verify_that method with a single screenshot path"""
-        VisualLibrary.verify_that("/path/to/image.png", "Contains green logo in top right corner")
+        AILibrary.verify_that("/path/to/image.png", "Contains green logo in top right corner")
 
         mock_genai.generate_ai_response.assert_called_once_with(
             instructions="Contains green logo in top right corner",
@@ -105,7 +105,7 @@ class TestVisualLibrary:
     def test_verify_that_multiple_paths(self, library, mock_genai, mock_logger):
         """Test verify_that method with multiple screenshot paths"""
         image_paths = ["/path/to/image1.png", "/path/to/image2.png"]
-        VisualLibrary.verify_that(image_paths, "Compare these images")
+        AILibrary.verify_that(image_paths, "Compare these images")
 
         mock_genai.generate_ai_response.assert_called_once_with(
             instructions="Compare these images",
@@ -117,14 +117,14 @@ class TestVisualLibrary:
         mock_genai.extract_result_and_explanation_from_response.return_value = ("FAIL", "Test failed")
 
         with pytest.raises(AssertionError) as exc:
-            VisualLibrary.verify_that("/path/to/image.png", "Contains green logo in top right corner")
+            AILibrary.verify_that("/path/to/image.png", "Contains green logo in top right corner")
 
         assert str(exc.value) == "Verification failed:\nTest failed"
 
     def test_verify_screenshot_matches_look_and_feel_template(self, library, mock_genai, mock_logger):
         """Test verify_screenshot_matches_look_and_feel_template method"""
         with patch.object(library, 'combine_images_on_paths_side_by_side') as mock_combine:
-            VisualLibrary.verify_screenshot_matches_look_and_feel_template(
+            AILibrary.verify_screenshot_matches_look_and_feel_template(
                 "/path/to/screenshot.png",
                 "/path/to/template.png"
             )
@@ -146,7 +146,7 @@ class TestVisualLibrary:
     def test_verify_screenshot_matches_look_and_feel_template_with_override(self, library, mock_genai):
         """Test verify_screenshot_matches_look_and_feel_template method with override instructions"""
         with patch.object(library, 'combine_images_on_paths_side_by_side'):
-            VisualLibrary.verify_screenshot_matches_look_and_feel_template(
+            AILibrary.verify_screenshot_matches_look_and_feel_template(
                 "/path/to/screenshot.png",
                 "/path/to/template.png",
                 override_instructions="Custom instructions"
@@ -159,7 +159,7 @@ class TestVisualLibrary:
 
     def test_verify_screenshot_matches_look_and_feel_template_no_combine(self, library, mock_genai):
         """Test verify_screenshot_matches_look_and_feel_template method without combining images"""
-        VisualLibrary.verify_screenshot_matches_look_and_feel_template(
+        AILibrary.verify_screenshot_matches_look_and_feel_template(
             "/path/to/screenshot.png",
             "/path/to/template.png",
             create_combined_image=False
@@ -170,7 +170,7 @@ class TestVisualLibrary:
     def test_verify_screenshot_matches_look_and_feel_template_combine_exception(self, library, mock_genai, mock_logger):
         """Test verify_screenshot_matches_look_and_feel_template method with exception during combine"""
         with patch.object(library, 'combine_images_on_paths_side_by_side', side_effect=Exception("Combine error")):
-            VisualLibrary.verify_screenshot_matches_look_and_feel_template(
+            AILibrary.verify_screenshot_matches_look_and_feel_template(
                 "/path/to/screenshot.png",
                 "/path/to/template.png"
             )
@@ -184,8 +184,8 @@ class TestVisualLibrary:
         mock_img = MagicMock(spec=Image.Image)
         mock_img.mode = "RGB"
 
-        with patch('VisualLibrary.library.Image.open', return_value=mock_img) as mock_open_image:
-            result = VisualLibrary.open_image("/path/to/image.png")
+        with patch('AILibrary.library.Image.open', return_value=mock_img) as mock_open_image:
+            result = AILibrary.open_image("/path/to/image.png")
 
             mock_open_image.assert_called_once_with("/path/to/image.png")
             assert result == mock_img
@@ -198,8 +198,8 @@ class TestVisualLibrary:
         converted_img = MagicMock(spec=Image.Image)
         mock_img.convert.return_value = converted_img
 
-        with patch('VisualLibrary.library.Image.open', return_value=mock_img) as mock_open_image:
-            result = VisualLibrary.open_image("/path/to/image.png", mode="RGBA")
+        with patch('AILibrary.library.Image.open', return_value=mock_img) as mock_open_image:
+            result = AILibrary.open_image("/path/to/image.png", mode="RGBA")
 
             mock_open_image.assert_called_once_with("/path/to/image.png")
             mock_img.convert.assert_called_once_with(mode="RGBA")
@@ -208,9 +208,9 @@ class TestVisualLibrary:
 
     def test_open_image_failure(self):
         """Test open_image method with failure to open image"""
-        with patch('VisualLibrary.Image.open', side_effect=Exception("Open error")):
+        with patch('AILibrary.Image.open', side_effect=Exception("Open error")):
             with pytest.raises(AssertionError) as exc:
-                VisualLibrary.open_image("/path/to/image.png")
+                AILibrary.open_image("/path/to/image.png")
 
             assert "Could not open image on provided path" in str(exc.value)
             assert "Open error" in str(exc.value)
@@ -221,9 +221,9 @@ class TestVisualLibrary:
         mock_img.mode = "RGB"
         mock_img.convert.side_effect = Exception("Convert error")
 
-        with patch('VisualLibrary.library.Image.open', return_value=mock_img):
+        with patch('AILibrary.library.Image.open', return_value=mock_img):
             with pytest.raises(AssertionError) as exc:
-                VisualLibrary.open_image("/path/to/image.png", mode="RGBA")
+                AILibrary.open_image("/path/to/image.png", mode="RGBA")
 
             assert "Could not convert image to provided mode" in str(exc.value)
             assert "Convert error" in str(exc.value)
@@ -231,7 +231,7 @@ class TestVisualLibrary:
     def test_save_image_with_name(self, library, mock_image, mock_logger):
         """Test save_image method with specified image name"""
         with patch('os.path.join', side_effect=lambda *args: '/'.join(args)):
-            result = VisualLibrary.save_image(mock_image, "test_image.png")
+            result = AILibrary.save_image(mock_image, "test_image.png")
 
             assert result == "/mock/output/dir/test_image.png"
             mock_image.save.assert_called_once_with("/mock/output/dir/test_image.png")
@@ -240,7 +240,7 @@ class TestVisualLibrary:
     def test_save_image_with_format(self, library, mock_image):
         """Test save_image method with specified format"""
         with patch('os.path.join', side_effect=lambda *args: '/'.join(args)):
-            VisualLibrary.save_image(mock_image, "test_image", "jpg")
+            AILibrary.save_image(mock_image, "test_image", "jpg")
 
             mock_image.save.assert_called_once()
 
@@ -248,7 +248,7 @@ class TestVisualLibrary:
         """Test save_image method with generated name"""
         with patch('os.path.join', side_effect=lambda *args: '/'.join(args)):
             with patch.object(library, 'generate_image_name', return_value="generated.png"):
-                result = VisualLibrary.save_image(mock_image)
+                result = AILibrary.save_image(mock_image)
 
                 assert result == "/mock/output/dir/generated.png"
                 mock_image.save.assert_called_once_with("/mock/output/dir/generated.png")
@@ -257,7 +257,7 @@ class TestVisualLibrary:
         """Test save_image method with watermark"""
         with patch('os.path.join', side_effect=lambda *args: '/'.join(args)):
             with patch.object(library, 'add_watermark_to_image', return_value=mock_image) as mock_add_watermark:
-                VisualLibrary.save_image(mock_image, "test_image.png", watermark="Test Watermark")
+                AILibrary.save_image(mock_image, "test_image.png", watermark="Test Watermark")
 
                 mock_add_watermark.assert_called_once_with(mock_image, "Test Watermark")
                 mock_image.save.assert_called_once_with("/mock/output/dir/test_image.png")
@@ -267,33 +267,33 @@ class TestVisualLibrary:
         mock_image.save.side_effect = Exception("Save error")
 
         with pytest.raises(AssertionError) as exc:
-            VisualLibrary.save_image(mock_image, "test_image.png")
+            AILibrary.save_image(mock_image, "test_image.png")
 
         assert "Could not save image" in str(exc.value)
         assert "Save error" in str(exc.value)
 
     def test_generate_image_name_default(self, mock_logger):
         """Test generate_image_name method with default parameters"""
-        with patch('VisualLibrary.datetime') as mock_datetime:
+        with patch('AILibrary.datetime') as mock_datetime:
             mock_datetime.now.return_value.strftime.return_value = "03-11-2025_10-30-45-123"
-            result = VisualLibrary.generate_image_name()
+            result = AILibrary.generate_image_name()
 
             assert result == "Snap-03-11-2025_10-30-45-123.png"
             mock_logger.debug.assert_called_once_with(f"Generated image name is: {result}")
 
     def test_generate_image_name_custom(self, mock_logger):
         """Test generate_image_name method with custom parameters"""
-        with patch('VisualLibrary.datetime') as mock_datetime:
+        with patch('AILibrary.datetime') as mock_datetime:
             mock_datetime.now.return_value.strftime.return_value = "03-11-2025_10-30-45-123"
-            result = VisualLibrary.generate_image_name(prefix="Custom", extension="jpg")
+            result = AILibrary.generate_image_name(prefix="Custom", extension="jpg")
 
             assert result == "Custom-03-11-2025_10-30-45-123.jpg"
 
     def test_generate_image_name_no_prefix(self, mock_logger):
         """Test generate_image_name method with no prefix"""
-        with patch('VisualLibrary.datetime') as mock_datetime:
+        with patch('AILibrary.datetime') as mock_datetime:
             mock_datetime.now.return_value.strftime.return_value = "03-11-2025_10-30-45-123"
-            result = VisualLibrary.generate_image_name(prefix="", extension="png")
+            result = AILibrary.generate_image_name(prefix="", extension="png")
 
             assert result == "03-11-2025_10-30-45-123.png"
 
@@ -302,7 +302,7 @@ class TestVisualLibrary:
         with patch.object(library, 'open_image', return_value=mock_image) as mock_open:
             with patch.object(library, 'combine_images_side_by_side', return_value=mock_image) as mock_combine:
                 with patch.object(library, 'save_image') as mock_save:
-                    VisualLibrary.combine_images_on_paths_side_by_side(
+                    AILibrary.combine_images_on_paths_side_by_side(
                         "/path/to/image1.png",
                         "/path/to/image2.png",
                         "Watermark1",
@@ -325,7 +325,7 @@ class TestVisualLibrary:
         with patch.object(library, 'open_image', return_value=mock_image):
             with patch.object(library, 'combine_images_side_by_side', return_value=mock_image) as mock_combine:
                 with patch.object(library, 'save_image') as mock_save:
-                    result = VisualLibrary.combine_images_on_paths_side_by_side(
+                    result = AILibrary.combine_images_on_paths_side_by_side(
                         "/path/to/image1.png",
                         "/path/to/image2.png",
                         save=False
@@ -336,9 +336,9 @@ class TestVisualLibrary:
 
     def test_combine_images_side_by_side(self, library, mock_image):
         """Test combine_images_side_by_side method"""
-        with patch('VisualLibrary.Image.new', return_value=mock_image) as mock_new_image:
+        with patch('AILibrary.Image.new', return_value=mock_image) as mock_new_image:
             with patch.object(library, 'add_watermark_to_image', return_value=mock_image) as mock_add_watermark:
-                result = VisualLibrary.combine_images_side_by_side(
+                result = AILibrary.combine_images_side_by_side(
                     mock_image,
                     mock_image,
                     watermark1="Watermark1",
@@ -355,9 +355,9 @@ class TestVisualLibrary:
 
     def test_combine_images_side_by_side_no_watermarks(self, library, mock_image):
         """Test combine_images_side_by_side method without watermarks"""
-        with patch('VisualLibrary.Image.new', return_value=mock_image) as mock_new_image:
+        with patch('AILibrary.Image.new', return_value=mock_image) as mock_new_image:
             with patch.object(library, 'add_watermark_to_image') as mock_add_watermark:
-                result = VisualLibrary.combine_images_side_by_side(mock_image, mock_image)
+                result = AILibrary.combine_images_side_by_side(mock_image, mock_image)
 
                 mock_new_image.assert_called_once()
                 mock_add_watermark.assert_not_called()
@@ -366,9 +366,9 @@ class TestVisualLibrary:
 
     def test_combine_images_side_by_side_failure(self, library, mock_image):
         """Test combine_images_side_by_side method with failure"""
-        with patch('VisualLibrary.Image.new', side_effect=Exception("Combine error")):
+        with patch('AILibrary.Image.new', side_effect=Exception("Combine error")):
             with pytest.raises(AssertionError) as exc:
-                VisualLibrary.combine_images_side_by_side(mock_image, mock_image)
+                AILibrary.combine_images_side_by_side(mock_image, mock_image)
 
             assert "Could not create combined image" in str(exc.value)
             assert "Combine error" in str(exc.value)
@@ -379,14 +379,14 @@ class TestVisualLibrary:
         mock_draw = MagicMock()
         mock_mask = MagicMock()
 
-        with patch('VisualLibrary.ImageFont.truetype', return_value=mock_font) as mock_truetype:
-            with patch('VisualLibrary.Image.new', return_value=mock_image) as mock_new_image:
-                with patch('VisualLibrary.ImageDraw.ImageDraw', return_value=mock_draw) as mock_imagedraw:
+        with patch('AILibrary.ImageFont.truetype', return_value=mock_font) as mock_truetype:
+            with patch('AILibrary.Image.new', return_value=mock_image) as mock_new_image:
+                with patch('AILibrary.ImageDraw.ImageDraw', return_value=mock_draw) as mock_imagedraw:
                     mock_image.convert.return_value.point.return_value = mock_mask
 
-                    result = VisualLibrary.add_watermark_to_image(mock_image, "Watermark", "blue", 40, (10, 10))
+                    result = AILibrary.add_watermark_to_image(mock_image, "Watermark", "blue", 40, (10, 10))
 
-                    mock_truetype.assert_called_once_with(VisualLibrary.FONT, 40)
+                    mock_truetype.assert_called_once_with(AILibrary.FONT, 40)
                     mock_new_image.assert_called_once_with("RGB", (100, 100))
                     mock_imagedraw.assert_called_once_with(mock_image, "RGB")
                     mock_draw.text.assert_called_once_with((10, 10), "Watermark", fill="blue", font=mock_font)
@@ -399,19 +399,19 @@ class TestVisualLibrary:
 
     def test_add_watermark_to_image_font_error(self, library, mock_image):
         """Test add_watermark_to_image method with font error"""
-        with patch('VisualLibrary.ImageFont.truetype', side_effect=Exception("Font error")):
+        with patch('AILibrary.ImageFont.truetype', side_effect=Exception("Font error")):
             with pytest.raises(AssertionError) as exc:
-                VisualLibrary.add_watermark_to_image(mock_image, "Watermark")
+                AILibrary.add_watermark_to_image(mock_image, "Watermark")
 
             assert "Could not set watermark font" in str(exc.value)
             assert "Font error" in str(exc.value)
 
     def test_add_watermark_to_image_creation_error(self, library, mock_image):
         """Test add_watermark_to_image method with watermark creation error"""
-        with patch('VisualLibrary.ImageFont.truetype', return_value=MagicMock()):
-            with patch('VisualLibrary.Image.new', side_effect=Exception("Watermark error")):
+        with patch('AILibrary.ImageFont.truetype', return_value=MagicMock()):
+            with patch('AILibrary.Image.new', side_effect=Exception("Watermark error")):
                 with pytest.raises(AssertionError) as exc:
-                    VisualLibrary.add_watermark_to_image(mock_image, "Watermark")
+                    AILibrary.add_watermark_to_image(mock_image, "Watermark")
 
                 assert "Could not create watermark" in str(exc.value)
                 assert "Watermark error" in str(exc.value)
@@ -420,7 +420,7 @@ class TestVisualLibrary:
         """Test _assert_result method with passing result"""
         mock_genai.extract_result_and_explanation_from_response.return_value = ("pass", "Test passed successfully")
 
-        VisualLibrary._assert_result("AI Response")
+        AILibrary._assert_result("AI Response")
 
         mock_genai.extract_result_and_explanation_from_response.assert_called_once_with("AI Response")
         mock_logger.info.assert_called_once_with("Verification passed:\nTest passed successfully")
@@ -430,7 +430,7 @@ class TestVisualLibrary:
         mock_genai.extract_result_and_explanation_from_response.return_value = ("fail", "Test failed")
 
         with pytest.raises(AssertionError) as exc:
-            VisualLibrary._assert_result("AI Response")
+            AILibrary._assert_result("AI Response")
 
         mock_genai.extract_result_and_explanation_from_response.assert_called_once_with("AI Response")
         assert str(exc.value) == "Verification failed:\nTest failed"
@@ -440,13 +440,13 @@ class TestVisualLibrary:
         mock_genai.extract_result_and_explanation_from_response.return_value = (None, "No result")
 
         with pytest.raises(AssertionError) as exc:
-            VisualLibrary._assert_result("AI Response")
+            AILibrary._assert_result("AI Response")
 
         assert str(exc.value) == "Verification failed:\nNo result"
 
     def test_get_rf_output_dir_running(self):
         """Test _get_rf_output_dir function when Robot Framework is running"""
-        with patch('VisualLibrary.BuiltIn') as mock_builtin:
+        with patch('AILibrary.BuiltIn') as mock_builtin:
             mock_builtin.return_value.get_variable_value.return_value = "/robot/output"
 
             from library import _get_rf_output_dir
@@ -457,9 +457,9 @@ class TestVisualLibrary:
 
     def test_get_rf_output_dir_not_running(self):
         """Test _get_rf_output_dir function when Robot Framework is not running"""
-        with patch('VisualLibrary.BuiltIn') as mock_builtin:
+        with patch('AILibrary.BuiltIn') as mock_builtin:
             mock_builtin.return_value.get_variable_value.side_effect = RobotNotRunningError("Not running")
-            with patch('VisualLibrary.os.getcwd', return_value="/current/dir"):
+            with patch('AILibrary.os.getcwd', return_value="/current/dir"):
                 from library import _get_rf_output_dir
                 result = _get_rf_output_dir()
 
