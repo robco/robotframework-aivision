@@ -10,5 +10,4 @@ This Library is using:
 
 ## Keywords documentation:
 
-Keywords documentation is a part of Robot Framework guide.
-Visit [Robot Framework Guide](https://docs.robotframework.org) to get familiar with DOROBOT products.
+TODO
