@@ -11,4 +11,4 @@ This Library is using:
 ## Keywords documentation:
 
 Keywords documentation is a part of Robot Framework guide.
-Visit [Robot Framework Guide]([http://go/robot-guide](https://docs.robotframework.org)) to get familiar with DOROBOT products.
+Visit [Robot Framework Guide](http://go/robot-guide](https://docs.robotframework.org) to get familiar with DOROBOT products.
