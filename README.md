@@ -1,3 +1,4 @@
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/robco)
 # Robot Framework GenAI Testing Library
 
 RobotFramework Gen AI Testing library for Front-End layout/templates testing using GenAI.
