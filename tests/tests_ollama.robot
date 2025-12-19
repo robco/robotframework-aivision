@@ -1,6 +1,6 @@
 *** Settings ***
 
-Library  VisualLibrary  model=qwen3-vl:8b
+Library  AILibrary  model=qwen3-vl:8b
 
 *** Variables ***
 

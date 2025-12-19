@@ -41,12 +41,12 @@ def readme():
             return r.read() + changes_title + ch.read()
 
 
-setup(name='robotframework_visuallibrary',
+setup(name='robotframework_ailibrary',
       version=version(),
-      description='GenAI aided Visual Testing library for Robot Framework',
+      description='GenAI Testing library for Robot Framework',
       long_description=readme(),
       long_description_content_type='text/markdown',
-      url='https://github.com/robco/robotframework-visuallibrary.git',
+      url='https://github.com/robco/robotframework-ailibrary.git',
       author='Róbert Malovec',
       author_email='robert@malovec.sk',
       license=license(),

@@ -20,27 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from enum import Enum
+"""
+Main Robot Framework AI Library plugin entrypoint
+"""
 
+from .library import VisualLibrary
 
-class Platforms(Enum):
-    """Enum defining supported AI platforms with their default configurations."""
-    Ollama = {
-        "default_model": "qwen3-coder:480b-cloud",
-        "default_base_url": "http://localhost:11434/v1",
-        "api_key_required": False,
-        "supports_vision": True
-    }
-    DockerModel = {
-        "default_model": "ai/qwen3-vl:8B-Q8_K_XL",
-        "default_base_url": "http://localhost:12434/engines/v1",
-        "api_key_required": False,
-        "supports_vision": True
-    }
-
-    Perplexity = {
-        "default_model": "sonar-pro",
-        "default_base_url": "https://api.perplexity.ai",
-        "api_key_required": True,
-        "supports_vision": True
-    }
+__all__ = ["AILibrary"]

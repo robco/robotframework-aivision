@@ -1,6 +1,6 @@
 *** Settings ***
 
-Library  VisualLibrary  platform=DockerModel
+Library  AILibrary  platform=DockerModel
 
 *** Variables ***
 
