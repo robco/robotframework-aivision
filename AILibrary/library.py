@@ -30,7 +30,7 @@ from datetime import datetime
 import os
 
 """
-GenAI aided Visual Testing library module for Robot Framework
+GenAI Testing library module for Robot Framework
 """
 
 
@@ -44,9 +44,9 @@ def _get_rf_output_dir():
     return output_dir
 
 
-class VisualLibrary:
+class AILibrary:
     """
-    GenAI aided Visual Testing library module for Robot Framework
+    GenAI Testing library module for Robot Framework
 
     This RF library provides GenAI enabled front-end, UI and visual templates testing capabilities
 
