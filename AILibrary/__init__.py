@@ -26,4 +26,4 @@ Main Visual Library plugin entrypoint
 
 from .library import VisualLibrary
 
-__all__ = ["VisualLibrary"]
+__all__ = ["AILibrary"]
