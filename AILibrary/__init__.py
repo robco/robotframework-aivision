@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 """
-Main Visual Library plugin entrypoint
+Main Robot Framework AI Library plugin entrypoint
 """
 
 from .library import VisualLibrary
