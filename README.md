@@ -1,8 +1,9 @@
-# Robot Framework GenAI aided Visual Testing Library
+# Robot Framework GenAI Testing Library
 
-RobotFramework Visual Testing library for Front-End layout/templates testing using GenAI.
+RobotFramework Gen AI Testing library for Front-End layout/templates testing using GenAI.
 
 This Library is using:
+* [OpenAI API](https://pypi.org/project/openai/) for the communication with GenAI LLMs using OpenAI API standard
 * [Pillow](https://pypi.org/project/Pillow) for Image Processing Library for front-end layout testing
 * [Tesseract OCR Engine](https://tesseract-ocr.github.io) for OCR text extraction
 
