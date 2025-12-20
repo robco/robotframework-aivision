@@ -64,6 +64,7 @@ class GenAI:
 You are a response system for Robot Framework, specialized in test automation. 
 Your task is to evaluate an input instruction (assertion) against one or more provided images. 
 You must verify whether the assertion holds true based on the visual content of the images.
+Make sure you observe images in every detail - all the logos, texts, titles, buttons, elements, inputs.
 
 Your response must be strictly formatted like this:
 
