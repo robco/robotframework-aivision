@@ -33,7 +33,7 @@ def test_verify_that(aivison_library):
     aivison_library.genai.generate_ai_response = MagicMock(return_value="response")
     aivison_library._assert_result = MagicMock()
     aivison_library.verify_that("path/to/image.png", "instructions")
-    aivison_library.genai.generate_ai_response.assert_called_once_with(instructions="instructions", image_paths=["path/to/image.png"])
+    aivison_library.genai.generate_ai_response.assert_called_once_with(instructions="Verify that: instructions", image_paths=["path/to/image.png"])
     aivison_library._assert_result.assert_called_once_with("response")
 
 def test_verify_screenshot_matches_look_and_feel_template(aivison_library):
