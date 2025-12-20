@@ -4,19 +4,17 @@ Library  AIVision  platform=Perplexity  api_key=%{PPLX_API_KEY}
 
 *** Variables ***
 
-${MERCK}     ${CURDIR}${/}res${/}merck.png
-${MENU}      ${CURDIR}${/}res${/}menu.png
-${TEMPLATE}  ${CURDIR}${/}res${/}ref_merck_app.png
-${VIEW}      ${CURDIR}${/}res${/}act_merck_app.png
+${ACTUAL}       ${CURDIR}${/}res${/}main.png
+${REFERENCE}    ${CURDIR}${/}res${/}ref_main.png
 
 *** Test Cases ***
 
-Check merck logo
-   Verify That  ${MERCK}  Shows merck logo in black and green color in top left
+Check Wikipedia logo
+   Verify That  ${ACTUAL}  Shows clear Wikipedia logo on top in the middle, logo text is clearly visible.
 
-Check merck logo ref
-   @{screenshots}  Create List  ${MENU}  ${MERCK}
-   Verify That  ${screenshots}  Describe both images are from the same page
+Check screenshots are from Wikipedia
+   @{screenshots}  Create List  ${ACTUAL}  ${REFERENCE}
+   Verify That  ${screenshots}  Provided screenshots are from Wikipedia main page.
 
-Check merck menu template
-   Verify Screenshot Matches Look And Feel Template  ${VIEW}  ${TEMPLATE}
+Check Wikipedia main page corresponds to the template
+   Verify Screenshot Matches Look And Feel Template  ${ACTUAL}  ${REFERENCE}
