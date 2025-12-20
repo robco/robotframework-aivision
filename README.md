@@ -1,7 +1,7 @@
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/robco)
-# Robot Framework GenAI Testing Library
+# Robot Framework AI Vision Library
 
-GenAI testing library for Robot Framework that verifies UI/screenshots (including template “look & feel”) by sending instructions plus one or more images to an OpenAI-compatible API (Ollama, OpenAI, Perplexity, Gemini, etc.).
+AI VIsion Library for Robot Framework that verifies UI/screenshots (including template “look & feel”) by sending instructions plus one or more images to an OpenAI-compatible API (Ollama, OpenAI, Perplexity, Gemini, etc.).
 
 The main keyword (`Verify That`) expects the model to return a strict `RESULT:` / `EXPLANATION:` format and will fail the test if the result is not `pass`.
 
@@ -16,7 +16,7 @@ The main keyword (`Verify That`) expects the model to return a strict `RESULT:` 
 
 **Install from PyPI (once published):**
 ```bash
-pip install -U robotframework-ailibrary
+pip install -U robotframework-aivision
 ```
 
 Runtime dependencies include Robot Framework, Pillow, and the `openai` Python client.
@@ -30,13 +30,13 @@ Import the library in Robot Framework and choose a provider using `platform` plu
 **Default (Ollama-like local setup):**
 ```robotframework
 *** Settings ***
-Library  AILibrary
+Library  AIVision
 ```
 
 **OpenAI (API key required):**
 ```robotframework
 *** Settings ***
-Library  AILibrary
+Library  AIVision
 ... platform=OpenAI
 ... api_key=%{OPENAI_API_KEY}
 ... model=gpt-5.2
@@ -45,7 +45,7 @@ Library  AILibrary
 **Perplexity:**
 ```robotframework
 *** Settings ***
-Library  AILibrary
+Library  AIVision
 ... platform=Perplexity
 ... api_key=%{PPLX_API_KEY}
 ... model=sonar-pro
@@ -54,7 +54,7 @@ Library  AILibrary
 **Gemini (OpenAI-compatible endpoint):**
 ```robotframework
 *** Settings ***
-Library  AILibrary
+Library  AIVision
 ... platform=Gemini
 ... api_key=%{GEMINI_API_KEY}
 ... model=gemini-2.5-flash
@@ -75,7 +75,7 @@ The library defines these platform presets (model and `base_url`) which you can 
 
 ## Keywords
 
-All keywords below are implemented in `AILibrary` and are available after importing the library.
+All keywords below are implemented in `AIVision` and are available after importing the library.
 
 | Keyword | Purpose |
 |---|---|
@@ -94,7 +94,7 @@ All keywords below are implemented in `AILibrary` and are available after import
 
 ```robotframework
 *** Settings ***
-Library  AILibrary  platform=Ollama
+Library  AIVision  platform=Ollama
 
 *** Test Cases ***
 Login button is correct
@@ -105,7 +105,7 @@ Login button is correct
 
 ```robotframework
 *** Settings ***
-Library  AILibrary
+Library  AIVision
 
 *** Test Cases ***
 Home page matches template
@@ -118,7 +118,7 @@ Home page matches template
 
 ```robotframework
 *** Settings ***
-Library  AILibrary
+Library  AIVision
 
 *** Test Cases ***
 Home page matches template - custom rules
