@@ -83,7 +83,7 @@ class AIVision:
         | Verify That | ${img_paths} | First image contains logo as referenced on 2nd image. |
         """
         screenshot_paths = [screenshot_paths] if isinstance(screenshot_paths, str) else screenshot_paths
-        response = self.genai.generate_ai_response(instructions=instructions, image_paths=screenshot_paths)
+        response = self.genai.generate_ai_response(instructions=f"Verify that: {instructions}", image_paths=screenshot_paths)
         logger.debug(response)
 
         self._assert_result(response)
@@ -118,10 +118,12 @@ class AIVision:
                 logger.warn(f"Could not create combined image: {e}")
 
         instructions = """First image is showing actual application view.
-                            Second image is reference design template. 
-                            Verify screenshot matches look and feel template. Pay attention to details, design is important.
-                            Make sure to check also all the visible logos, banners and any available graphics.
-                            """
+Second image is reference design template. 
+Verify screenshot matches look and feel template. Pay attention to details, design is important.
+Make sure to check also all the visible logos, titles, labels, spelling, texts, links, menus, banners
+and any available graphics. Always doublecheck the reference image in case you think some
+text, label, logo or element is overlapping or containing typo.
+"""
         if override_instructions:
             instructions = override_instructions
         response = self.genai.generate_ai_response(
