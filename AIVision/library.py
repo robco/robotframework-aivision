@@ -44,9 +44,9 @@ def _get_rf_output_dir():
     return output_dir
 
 
-class AILibrary:
+class AIVision:
     """
-    GenAI Testing library module for Robot Framework
+    AI Vision Library module for Robot Framework
 
     This RF library provides GenAI enabled front-end, UI and visual templates testing capabilities
 
