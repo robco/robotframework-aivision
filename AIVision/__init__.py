@@ -24,6 +24,6 @@
 Main Robot Framework AI Library plugin entrypoint
 """
 
-from .library import AILibrary
+from .library import AIVision
 
-__all__ = ["AILibrary"]
+__all__ = ["AIVision"]

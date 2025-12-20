@@ -1,6 +1,6 @@
 *** Settings ***
 
-Library  AILibrary  platform=DockerModel
+Library  AIVision  platform=DockerModel
 
 *** Variables ***
 

@@ -1,6 +1,6 @@
 *** Settings ***
 
-Library  AILibrary  platform=Perplexity  api_key=%{PPLX_API_KEY}
+Library  AIVision  platform=Perplexity  api_key=%{PPLX_API_KEY}
 
 *** Variables ***
 

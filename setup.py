@@ -41,12 +41,12 @@ def readme():
             return r.read() + changes_title + ch.read()
 
 
-setup(name='robotframework_ailibrary',
+setup(name='robotframework_aivision',
       version=version(),
-      description='GenAI Testing library for Robot Framework',
+      description='AI Vision library for Robot Framework',
       long_description=readme(),
       long_description_content_type='text/markdown',
-      url='https://github.com/robco/robotframework-ailibrary.git',
+      url='https://github.com/robco/robotframework-aivision.git',
       author='Róbert Malovec',
       author_email='robert@malovec.sk',
       license=license(),

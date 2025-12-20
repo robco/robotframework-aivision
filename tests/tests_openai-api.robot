@@ -1,6 +1,6 @@
 *** Settings ***
 
-Library  AILibrary  platform=Manual  api_key=%{GEMINI_API}  base_url=https://generativelanguage.googleapis.com/v1beta/openai/  model=gemini-2.5-flash
+Library  AIVision  platform=Manual  api_key=%{GEMINI_API}  base_url=https://generativelanguage.googleapis.com/v1beta/openai/  model=gemini-2.5-flash
 
 *** Variables ***
 

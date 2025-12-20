@@ -22,55 +22,55 @@
 
 import pytest
 from unittest.mock import MagicMock, patch
-from AILibrary import AILibrary
+from AIVision import AIVision
 from PIL import Image
 
 @pytest.fixture
-def genai_ai_library():
-    return AILibrary(api_key="test")
+def aivison_library():
+    return AIVision(api_key="test")
 
-def test_verify_that(genai_ai_library):
-    genai_ai_library.genai.generate_ai_response = MagicMock(return_value="response")
-    genai_ai_library._assert_result = MagicMock()
-    genai_ai_library.verify_that("path/to/image.png", "instructions")
-    genai_ai_library.genai.generate_ai_response.assert_called_once_with(instructions="instructions", image_paths=["path/to/image.png"])
-    genai_ai_library._assert_result.assert_called_once_with("response")
+def test_verify_that(aivison_library):
+    aivison_library.genai.generate_ai_response = MagicMock(return_value="response")
+    aivison_library._assert_result = MagicMock()
+    aivison_library.verify_that("path/to/image.png", "instructions")
+    aivison_library.genai.generate_ai_response.assert_called_once_with(instructions="instructions", image_paths=["path/to/image.png"])
+    aivison_library._assert_result.assert_called_once_with("response")
 
-def test_verify_screenshot_matches_look_and_feel_template(genai_ai_library):
-    genai_ai_library.genai.generate_ai_response = MagicMock(return_value="response")
-    genai_ai_library._assert_result = MagicMock()
-    with patch.object(genai_ai_library, 'combine_images_on_paths_side_by_side', return_value=None):
-        genai_ai_library.verify_screenshot_matches_look_and_feel_template("path/to/screenshot.png", "path/to/template.png")
-        genai_ai_library.genai.generate_ai_response.assert_called_once()
-        genai_ai_library._assert_result.assert_called_once_with("response")
+def test_verify_screenshot_matches_look_and_feel_template(aivison_library):
+    aivison_library.genai.generate_ai_response = MagicMock(return_value="response")
+    aivison_library._assert_result = MagicMock()
+    with patch.object(aivison_library, 'combine_images_on_paths_side_by_side', return_value=None):
+        aivison_library.verify_screenshot_matches_look_and_feel_template("path/to/screenshot.png", "path/to/template.png")
+        aivison_library.genai.generate_ai_response.assert_called_once()
+        aivison_library._assert_result.assert_called_once_with("response")
 
-def test_open_image(genai_ai_library):
+def test_open_image(aivison_library):
     with patch("PIL.Image.open", return_value=Image.new("RGB", (100, 100))):
-        image = genai_ai_library.open_image("path/to/image.png")
+        image = aivison_library.open_image("path/to/image.png")
         assert image.mode == "RGB"
 
-def test_save_image(genai_ai_library):
+def test_save_image(aivison_library):
     image = Image.new("RGB", (100, 100))
     with patch.object(image, 'save', return_value=None) as mock_save:
         with patch("robot.api.logger.info") as mock_logger_info:
-            path = genai_ai_library.save_image(image, image_name="test_image.png")
+            path = aivison_library.save_image(image, image_name="test_image.png")
             mock_save.assert_called_once()
             mock_logger_info.assert_called_once()
             assert path.endswith("test_image.png")
 
-def test_generate_image_name(genai_ai_library):
-    name = genai_ai_library.generate_image_name(prefix="Test", extension="jpg")
+def test_generate_image_name(aivison_library):
+    name = aivison_library.generate_image_name(prefix="Test", extension="jpg")
     assert name.startswith("Test")
     assert name.endswith(".jpg")
 
-def test_combine_images_on_paths_side_by_side(genai_ai_library):
-    with patch.object(genai_ai_library, 'open_image', return_value=Image.new("RGB", (100, 100))):
-        with patch.object(genai_ai_library, 'combine_images_side_by_side', return_value=Image.new("RGB", (200, 100))):
-            combined_image = genai_ai_library.combine_images_on_paths_side_by_side("path/to/image1.png", "path/to/image2.png", save=False)
+def test_combine_images_on_paths_side_by_side(aivison_library):
+    with patch.object(aivison_library, 'open_image', return_value=Image.new("RGB", (100, 100))):
+        with patch.object(aivison_library, 'combine_images_side_by_side', return_value=Image.new("RGB", (200, 100))):
+            combined_image = aivison_library.combine_images_on_paths_side_by_side("path/to/image1.png", "path/to/image2.png", save=False)
             assert combined_image.size == (200, 100)
 
-def test_add_watermark_to_image(genai_ai_library):
+def test_add_watermark_to_image(aivison_library):
     image = Image.new("RGB", (100, 100))
-    watermarked_image = genai_ai_library.add_watermark_to_image(image, "Test Watermark")
+    watermarked_image = aivison_library.add_watermark_to_image(image, "Test Watermark")
     assert watermarked_image.size == (100, 100)
 
