@@ -107,7 +107,8 @@ Ensure no other text is provided in the response.
 
     def __init__(self, platform: Platforms = Platforms.Ollama, base_url: str = None,
                  api_key: str = None, model: str = None, image_detail: str = None,
-                 simple_response: bool = True, initialize: bool = True):
+                 simple_response: bool = True, initialize: bool = True,
+                 system_prompt: str = AUTOMATOR_INSTRUCTION):
         """
         Initialize GenAI instance.
 
@@ -119,9 +120,11 @@ Ensure no other text is provided in the response.
             image_detail: Detail level for image processing
             simple_response: Return simplified responses
             initialize: Initialize client immediately
+            system_prompt: Main AI System prompt specifying Gen AI behavior
         """
         self.client = None
         self.simple_response = simple_response
+        self.system_prompt = system_prompt
 
         # Set default API key for platforms that don't require real keys
         if platform == Platforms.Ollama and not api_key:
@@ -217,7 +220,7 @@ Ensure no other text is provided in the response.
         content = [
             {
                 "type": "text",
-                "text": self.AUTOMATOR_INSTRUCTION
+                "text": self.system_prompt
             },
             {
                 "type": "text",
