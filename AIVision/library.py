@@ -59,11 +59,11 @@ class AIVision:
 
     def __init__(self, base_url: str = None, api_key: str = None, platform: Platforms = Platforms.Ollama,
                  model: str = None, image_detail: str = None, simple_response: bool = True,
-                 initialize: bool = True):
+                 initialize: bool = True, system_prompt: str = None):
 
         self.genai = GenAI(base_url=base_url, api_key=api_key, platform=platform,
                            model=model, image_detail=image_detail,
-                           simple_response=simple_response, initialize=initialize)
+                           simple_response=simple_response, initialize=initialize, system_prompt=system_prompt)
 
     @keyword
     def verify_that(self, screenshot_paths, instructions):
