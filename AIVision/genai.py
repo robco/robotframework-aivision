@@ -124,7 +124,7 @@ Ensure no other text is provided in the response.
         """
         self.client = None
         self.simple_response = simple_response
-        self.system_prompt = system_prompt
+        self.system_prompt = system_prompt or self.AUTOMATOR_INSTRUCTION
 
         # Set default API key for platforms that don't require real keys
         if platform == Platforms.Ollama and not api_key:
