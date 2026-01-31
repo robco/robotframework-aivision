@@ -1,0 +1,227 @@
+name: Python Package CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  test-and-build:
+    name: 🧪 Test & Build (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.12" ]
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest pytest-cov pytest-html pytest-json-report build
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        python -m pip install -e ".[dev]"
+
+    - name: 🔍 Lint with flake8
+      run: |
+        echo "## 🔍 Linting Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Run flake8 and capture detailed results
+        flake8 . --format='%(path)s:%(row)d:%(col)d: %(code)s %(text)s' --select=E9,F63,F7,F82 > flake8_critical.txt || true
+        flake8 . --format='%(path)s:%(row)d:%(col)d: %(code)s %(text)s' --exit-zero --max-complexity=10 --max-line-length=127 --exclude=E9,F63,F7,F82 > flake8_warnings.txt || true
+        
+        # Count issues
+        critical_count=$(wc -l < flake8_critical.txt || echo "0")
+        warning_count=$(wc -l < flake8_warnings.txt || echo "0")
+        
+        # Create linting summary table
+        echo "### 📊 Linting Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Issue Type | Count | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|------------|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "$critical_count" -eq 0 ]; then
+          echo "| 🚨 **Critical Errors** | $critical_count | ✅ Pass |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| 🚨 **Critical Errors** | $critical_count | ❌ Fail |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "$warning_count" -eq 0 ]; then
+          echo "| ⚠️ **Style Warnings** | $warning_count | ✅ Clean |" >> $GITHUB_STEP_SUMMARY
+        elif [ "$warning_count" -le 10 ]; then
+          echo "| ⚠️ **Style Warnings** | $warning_count | 🟡 Minor |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| ⚠️ **Style Warnings** | $warning_count | 🟠 Review |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Show critical errors if any
+        if [ "$critical_count" -gt 0 ]; then
+          echo "### 🚨 Critical Errors Details" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Line | Column | Code | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|--------|------|-------------|" >> $GITHUB_STEP_SUMMARY
+          
+          while IFS= read -r line; do
+            if [ -n "$line" ]; then
+              # Parse flake8 output: file:line:col: code description
+              file=$(echo "$line" | cut -d':' -f1)
+              line_num=$(echo "$line" | cut -d':' -f2)
+              col_num=$(echo "$line" | cut -d':' -f3)
+              rest=$(echo "$line" | cut -d':' -f4- | sed 's/^ *//')
+              code=$(echo "$rest" | cut -d' ' -f1)
+              desc=$(echo "$rest" | cut -d' ' -f2-)
+              
+              echo "| \`$file\` | $line_num | $col_num | \`$code\` | $desc |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done < flake8_critical.txt
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Show top 10 warnings if any
+        if [ "$warning_count" -gt 0 ]; then
+          echo "### ⚠️ Style Warnings (Top 10)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| File | Line | Column | Code | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|--------|------|-------------|" >> $GITHUB_STEP_SUMMARY
+          
+          head -10 flake8_warnings.txt | while IFS= read -r line; do
+            if [ -n "$line" ]; then
+              file=$(echo "$line" | cut -d':' -f1)
+              line_num=$(echo "$line" | cut -d':' -f2)
+              col_num=$(echo "$line" | cut -d':' -f3)
+              rest=$(echo "$line" | cut -d':' -f4- | sed 's/^ *//')
+              code=$(echo "$rest" | cut -d' ' -f1)
+              desc=$(echo "$rest" | cut -d' ' -f2-)
+              
+              echo "| \`$file\` | $line_num | $col_num | \`$code\` | $desc |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          if [ "$warning_count" -gt 10 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "_... and $(($warning_count - 10)) more warnings. See full report in artifacts._" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: 🧪 Run tests with coverage
+      run: |
+        echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+        
+        # Run tests with multiple output formats
+        python -m pytest unittests/ \
+          --cov=epg_grabber \
+          --cov-report=xml \
+          --cov-report=html \
+          --cov-report=term-missing \
+          --junit-xml=test-results.xml \
+          --html=test-report.html \
+          --self-contained-html \
+          --json-report --json-report-file=test-results.json \
+          -v
+        
+        echo "✅ **Tests completed successfully**" >> $GITHUB_STEP_SUMMARY
+    
+    - name: 📊 Generate test summary
+      if: always()
+      run: |
+        python .github/scripts/parse_test_results.py
+        
+    - name: 📈 Generate coverage summary
+      if: always()
+      run: |
+        echo "## 📈 Coverage Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        python .github/scripts/parse_coverage.py
+        
+    - name: 🏗️ Build package
+      run: |
+        echo "## 🏗️ Package Build" >> $GITHUB_STEP_SUMMARY
+        
+        python -m build .
+        
+        # Check if build was successful
+        if [ -d "dist" ] && [ "$(ls -A dist)" ]; then
+          echo "✅ **Package built successfully**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Generated files:**" >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          ls -la dist/ >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Package build failed**" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
+
+    - name: 📤 Upload test results and reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-and-lint-reports-python-${{ matrix.python-version }}
+        path: |
+          test-results.xml
+          test-results.json
+          test-report.html
+          coverage.xml
+          htmlcov/
+          flake8_critical.txt
+          flake8_warnings.txt
+          .github/scripts/
+        retention-days: 30
+
+    - name: 📤 Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: python-package-${{ matrix.python-version }}
+        path: dist/
+        retention-days: 30
+
+    - name: 📊 Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: 🧪 Test Results (Python ${{ matrix.python-version }})
+        path: test-results.xml
+        reporter: java-junit
+        fail-on-error: true
+
+    - name: 📝 Final summary
+      if: always()
+      run: |
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 🎉 Workflow Complete" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Python Version:** ${{ matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Runner:** ${{ runner.os }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "🎊 **Overall Status:** ✅ SUCCESS" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "💥 **Overall Status:** ❌ FAILURE" >> $GITHUB_STEP_SUMMARY
+        fi
