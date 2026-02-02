@@ -64,6 +64,7 @@ class AIVision:
         self.genai = GenAI(base_url=base_url, api_key=api_key, platform=platform,
                            model=model, image_detail=image_detail,
                            simple_response=simple_response, initialize=initialize, system_prompt=system_prompt)
+        self.OUTPUT_DIR = _get_rf_output_dir()
 
     @keyword
     def verify_that(self, screenshot_paths, instructions):
@@ -183,7 +184,7 @@ text, label, logo or element is overlapping or containing typo.
             image_name=None,
             image_format=None,
             watermark=None,
-            image_path=OUTPUT_DIR,
+            image_path=None,
     ):
         """Saves image to provided path and name
 
@@ -210,6 +211,9 @@ text, label, logo or element is overlapping or containing typo.
         | Save Image | ${image}| my_image.png | watermark=My Label |
         | Save Image | ${image}| my_image.png | image_path=/path/to/my/image/directory |
         """
+        if image_path is None:
+            image_path = self.OUTPUT_DIR
+
         try:
             if not image_name:
                 if image_format:
@@ -306,6 +310,8 @@ text, label, logo or element is overlapping or containing typo.
 
         if save:
             self.save_image(combined_img)
+
+        return combined_img
 
     # pylint: disable=too-many-arguments,too-many-positional-arguments
     @keyword

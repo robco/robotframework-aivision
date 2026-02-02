@@ -10,6 +10,7 @@ The main keyword (`Verify That`) expects the model to return a strict `RESULT:` 
 - Visual assertions on one or more screenshots using natural-language instructions.
 - Template comparison keyword to validate “actual vs expected” look & feel (optionally creates a side-by-side image).
 - Image utilities built on Pillow: open/convert, watermark, combine images, auto-generate names, save into Robot Framework output directory.
+- Configurable AI system prompt for enforcing response format and verification behavior.
 - Works with multiple providers via the `openai` Python client and OpenAI-compatible endpoints (`base_url`).
 
 ## Installation
@@ -58,6 +59,18 @@ Library  AIVision
 ... platform=Gemini
 ... api_key=%{GEMINI_API_KEY}
 ... model=gemini-2.5-flash
+```
+
+### Advanced configuration
+
+You can override the default AI system prompt that enforces the strict `RESULT:` / `EXPLANATION:` response format.
+
+```robotframework
+*** Settings ***
+Library  AIVision
+... platform=OpenAI
+... api_key=%{OPENAI_API_KEY}
+... system_prompt=You are a test automation assistant. Return exactly: RESULT: pass|fail and EXPLANATION: ...
 ```
 
 ### Supported platforms (defaults)

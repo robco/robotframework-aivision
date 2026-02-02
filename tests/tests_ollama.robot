@@ -1,6 +1,6 @@
 *** Settings ***
 
-Library  AIVision  model=qwen3-vl:8b
+Library  AIVision  model=nemotron-3-nano:30b-cloud
 
 *** Variables ***
 

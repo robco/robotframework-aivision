@@ -1,6 +1,6 @@
 *** Settings ***
 
-Library  AIVision  platform=DockerModel
+Library  AIVision  platform=DockerModel  model=qwen3-vl:8B-Q8_K_XL
 
 *** Variables ***
 

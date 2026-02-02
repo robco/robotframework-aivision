@@ -38,7 +38,7 @@ class TestAIVision:
     @pytest.fixture
     def mock_genai(self):
         """Fixture to create a mock GenAI instance"""
-        with patch('AIVision.genai.GenAI') as mock_genai_class:
+        with patch('AIVision.library.GenAI') as mock_genai_class:
             mock_genai_instance = mock_genai_class.return_value
             mock_genai_instance.generate_ai_response.return_value = "AI Response"
             mock_genai_instance.extract_result_and_explanation_from_response.return_value = ("pass", "Test passed")
@@ -80,35 +80,38 @@ class TestAIVision:
             )
 
             # Verify GenAI was initialized with the correct parameters
-            from AIVision.genai import GenAI
+            from AIVision.library import GenAI
+            from AIVision.library import Platforms
             GenAI.assert_called_once_with(
                 base_url="http://test.com",
                 api_key="test_key",
+                platform=Platforms.Ollama,
                 model="test_model",
                 image_detail="high",
                 simple_response=True,
-                initialize=True
+                initialize=True,
+                system_prompt=None
             )
 
     def test_verify_that_single_path(self, library, mock_genai, mock_logger):
         """Test verify_that method with a single screenshot path"""
-        AIVision.verify_that("/path/to/image.png", "Contains green logo in top right corner")
+        library.verify_that("/path/to/image.png", "Contains green logo in top right corner")
 
         mock_genai.generate_ai_response.assert_called_once_with(
-            instructions="Contains green logo in top right corner",
+            instructions="Verify that: Contains green logo in top right corner",
             image_paths=["/path/to/image.png"]
         )
         mock_logger.debug.assert_called_once_with("AI Response")
         mock_genai.extract_result_and_explanation_from_response.assert_called_once_with("AI Response")
-        mock_logger.info.assert_called_once_with("Verification passed:\nTest passed", html=False)
+        mock_logger.info.assert_called_once_with("Verification passed:\nTest passed")
 
     def test_verify_that_multiple_paths(self, library, mock_genai, mock_logger):
         """Test verify_that method with multiple screenshot paths"""
         image_paths = ["/path/to/image1.png", "/path/to/image2.png"]
-        AIVision.verify_that(image_paths, "Compare these images")
+        library.verify_that(image_paths, "Compare these images")
 
         mock_genai.generate_ai_response.assert_called_once_with(
-            instructions="Compare these images",
+            instructions="Verify that: Compare these images",
             image_paths=image_paths
         )
 
@@ -117,14 +120,14 @@ class TestAIVision:
         mock_genai.extract_result_and_explanation_from_response.return_value = ("FAIL", "Test failed")
 
         with pytest.raises(AssertionError) as exc:
-            AIVision.verify_that("/path/to/image.png", "Contains green logo in top right corner")
+            library.verify_that("/path/to/image.png", "Contains green logo in top right corner")
 
         assert str(exc.value) == "Verification failed:\nTest failed"
 
     def test_verify_screenshot_matches_look_and_feel_template(self, library, mock_genai, mock_logger):
         """Test verify_screenshot_matches_look_and_feel_template method"""
         with patch.object(library, 'combine_images_on_paths_side_by_side') as mock_combine:
-            AIVision.verify_screenshot_matches_look_and_feel_template(
+            library.verify_screenshot_matches_look_and_feel_template(
                 "/path/to/screenshot.png",
                 "/path/to/template.png"
             )
@@ -146,7 +149,7 @@ class TestAIVision:
     def test_verify_screenshot_matches_look_and_feel_template_with_override(self, library, mock_genai):
         """Test verify_screenshot_matches_look_and_feel_template method with override instructions"""
         with patch.object(library, 'combine_images_on_paths_side_by_side'):
-            AIVision.verify_screenshot_matches_look_and_feel_template(
+            library.verify_screenshot_matches_look_and_feel_template(
                 "/path/to/screenshot.png",
                 "/path/to/template.png",
                 override_instructions="Custom instructions"
@@ -159,7 +162,7 @@ class TestAIVision:
 
     def test_verify_screenshot_matches_look_and_feel_template_no_combine(self, library, mock_genai):
         """Test verify_screenshot_matches_look_and_feel_template method without combining images"""
-        AIVision.verify_screenshot_matches_look_and_feel_template(
+        library.verify_screenshot_matches_look_and_feel_template(
             "/path/to/screenshot.png",
             "/path/to/template.png",
             create_combined_image=False
@@ -170,7 +173,7 @@ class TestAIVision:
     def test_verify_screenshot_matches_look_and_feel_template_combine_exception(self, library, mock_genai, mock_logger):
         """Test verify_screenshot_matches_look_and_feel_template method with exception during combine"""
         with patch.object(library, 'combine_images_on_paths_side_by_side', side_effect=Exception("Combine error")):
-            AIVision.verify_screenshot_matches_look_and_feel_template(
+            library.verify_screenshot_matches_look_and_feel_template(
                 "/path/to/screenshot.png",
                 "/path/to/template.png"
             )
@@ -204,11 +207,11 @@ class TestAIVision:
             mock_open_image.assert_called_once_with("/path/to/image.png")
             mock_img.convert.assert_called_once_with(mode="RGBA")
             assert result == converted_img
-            assert mock_logger.debug.call_count == 2
+            assert mock_logger.debug.call_count == 3
 
     def test_open_image_failure(self):
         """Test open_image method with failure to open image"""
-        with patch('AIVision.Image.open', side_effect=Exception("Open error")):
+        with patch('AIVision.library.Image.open', side_effect=Exception("Open error")):
             with pytest.raises(AssertionError) as exc:
                 AIVision.open_image("/path/to/image.png")
 
@@ -231,7 +234,7 @@ class TestAIVision:
     def test_save_image_with_name(self, library, mock_image, mock_logger):
         """Test save_image method with specified image name"""
         with patch('os.path.join', side_effect=lambda *args: '/'.join(args)):
-            result = AIVision.save_image(mock_image, "test_image.png")
+            result = library.save_image(mock_image, "test_image.png")
 
             assert result == "/mock/output/dir/test_image.png"
             mock_image.save.assert_called_once_with("/mock/output/dir/test_image.png")
@@ -240,7 +243,7 @@ class TestAIVision:
     def test_save_image_with_format(self, library, mock_image):
         """Test save_image method with specified format"""
         with patch('os.path.join', side_effect=lambda *args: '/'.join(args)):
-            AIVision.save_image(mock_image, "test_image", "jpg")
+            library.save_image(mock_image, "test_image", "jpg")
 
             mock_image.save.assert_called_once()
 
@@ -248,7 +251,7 @@ class TestAIVision:
         """Test save_image method with generated name"""
         with patch('os.path.join', side_effect=lambda *args: '/'.join(args)):
             with patch.object(library, 'generate_image_name', return_value="generated.png"):
-                result = AIVision.save_image(mock_image)
+                result = library.save_image(mock_image)
 
                 assert result == "/mock/output/dir/generated.png"
                 mock_image.save.assert_called_once_with("/mock/output/dir/generated.png")
@@ -257,7 +260,7 @@ class TestAIVision:
         """Test save_image method with watermark"""
         with patch('os.path.join', side_effect=lambda *args: '/'.join(args)):
             with patch.object(library, 'add_watermark_to_image', return_value=mock_image) as mock_add_watermark:
-                AIVision.save_image(mock_image, "test_image.png", watermark="Test Watermark")
+                library.save_image(mock_image, "test_image.png", watermark="Test Watermark")
 
                 mock_add_watermark.assert_called_once_with(mock_image, "Test Watermark")
                 mock_image.save.assert_called_once_with("/mock/output/dir/test_image.png")
@@ -267,15 +270,15 @@ class TestAIVision:
         mock_image.save.side_effect = Exception("Save error")
 
         with pytest.raises(AssertionError) as exc:
-            AIVision.save_image(mock_image, "test_image.png")
+            library.save_image(mock_image, "test_image.png")
 
         assert "Could not save image" in str(exc.value)
         assert "Save error" in str(exc.value)
 
     def test_generate_image_name_default(self, mock_logger):
         """Test generate_image_name method with default parameters"""
-        with patch('AIVision.datetime') as mock_datetime:
-            mock_datetime.now.return_value.strftime.return_value = "03-11-2025_10-30-45-123"
+        with patch('AIVision.library.datetime') as mock_datetime:
+            mock_datetime.now.return_value.strftime.return_value = "03-11-2025_10-30-45-123456"
             result = AIVision.generate_image_name()
 
             assert result == "Snap-03-11-2025_10-30-45-123.png"
@@ -283,16 +286,16 @@ class TestAIVision:
 
     def test_generate_image_name_custom(self, mock_logger):
         """Test generate_image_name method with custom parameters"""
-        with patch('AIVision.datetime') as mock_datetime:
-            mock_datetime.now.return_value.strftime.return_value = "03-11-2025_10-30-45-123"
+        with patch('AIVision.library.datetime') as mock_datetime:
+            mock_datetime.now.return_value.strftime.return_value = "03-11-2025_10-30-45-123456"
             result = AIVision.generate_image_name(prefix="Custom", extension="jpg")
 
             assert result == "Custom-03-11-2025_10-30-45-123.jpg"
 
     def test_generate_image_name_no_prefix(self, mock_logger):
         """Test generate_image_name method with no prefix"""
-        with patch('AIVision.datetime') as mock_datetime:
-            mock_datetime.now.return_value.strftime.return_value = "03-11-2025_10-30-45-123"
+        with patch('AIVision.library.datetime') as mock_datetime:
+            mock_datetime.now.return_value.strftime.return_value = "03-11-2025_10-30-45-123456"
             result = AIVision.generate_image_name(prefix="", extension="png")
 
             assert result == "03-11-2025_10-30-45-123.png"
@@ -302,7 +305,7 @@ class TestAIVision:
         with patch.object(library, 'open_image', return_value=mock_image) as mock_open:
             with patch.object(library, 'combine_images_side_by_side', return_value=mock_image) as mock_combine:
                 with patch.object(library, 'save_image') as mock_save:
-                    AIVision.combine_images_on_paths_side_by_side(
+                    library.combine_images_on_paths_side_by_side(
                         "/path/to/image1.png",
                         "/path/to/image2.png",
                         "Watermark1",
@@ -325,7 +328,7 @@ class TestAIVision:
         with patch.object(library, 'open_image', return_value=mock_image):
             with patch.object(library, 'combine_images_side_by_side', return_value=mock_image) as mock_combine:
                 with patch.object(library, 'save_image') as mock_save:
-                    result = AIVision.combine_images_on_paths_side_by_side(
+                    result = library.combine_images_on_paths_side_by_side(
                         "/path/to/image1.png",
                         "/path/to/image2.png",
                         save=False
@@ -336,9 +339,9 @@ class TestAIVision:
 
     def test_combine_images_side_by_side(self, library, mock_image):
         """Test combine_images_side_by_side method"""
-        with patch('AIVision.Image.new', return_value=mock_image) as mock_new_image:
+        with patch('AIVision.library.Image.new', return_value=mock_image) as mock_new_image:
             with patch.object(library, 'add_watermark_to_image', return_value=mock_image) as mock_add_watermark:
-                result = AIVision.combine_images_side_by_side(
+                result = library.combine_images_side_by_side(
                     mock_image,
                     mock_image,
                     watermark1="Watermark1",
@@ -355,9 +358,9 @@ class TestAIVision:
 
     def test_combine_images_side_by_side_no_watermarks(self, library, mock_image):
         """Test combine_images_side_by_side method without watermarks"""
-        with patch('AIVision.Image.new', return_value=mock_image) as mock_new_image:
+        with patch('AIVision.library.Image.new', return_value=mock_image) as mock_new_image:
             with patch.object(library, 'add_watermark_to_image') as mock_add_watermark:
-                result = AIVision.combine_images_side_by_side(mock_image, mock_image)
+                result = library.combine_images_side_by_side(mock_image, mock_image)
 
                 mock_new_image.assert_called_once()
                 mock_add_watermark.assert_not_called()
@@ -366,9 +369,9 @@ class TestAIVision:
 
     def test_combine_images_side_by_side_failure(self, library, mock_image):
         """Test combine_images_side_by_side method with failure"""
-        with patch('AIVision.Image.new', side_effect=Exception("Combine error")):
+        with patch('AIVision.library.Image.new', side_effect=Exception("Combine error")):
             with pytest.raises(AssertionError) as exc:
-                AIVision.combine_images_side_by_side(mock_image, mock_image)
+                library.combine_images_side_by_side(mock_image, mock_image)
 
             assert "Could not create combined image" in str(exc.value)
             assert "Combine error" in str(exc.value)
@@ -379,12 +382,12 @@ class TestAIVision:
         mock_draw = MagicMock()
         mock_mask = MagicMock()
 
-        with patch('AIVision.ImageFont.truetype', return_value=mock_font) as mock_truetype:
-            with patch('AIVision.Image.new', return_value=mock_image) as mock_new_image:
-                with patch('AIVision.ImageDraw.ImageDraw', return_value=mock_draw) as mock_imagedraw:
+        with patch('AIVision.library.ImageFont.truetype', return_value=mock_font) as mock_truetype:
+            with patch('AIVision.library.Image.new', return_value=mock_image) as mock_new_image:
+                with patch('AIVision.library.ImageDraw.ImageDraw', return_value=mock_draw) as mock_imagedraw:
                     mock_image.convert.return_value.point.return_value = mock_mask
 
-                    result = AIVision.add_watermark_to_image(mock_image, "Watermark", "blue", 40, (10, 10))
+                    result = library.add_watermark_to_image(mock_image, "Watermark", "blue", 40, (10, 10))
 
                     mock_truetype.assert_called_once_with(AIVision.FONT, 40)
                     mock_new_image.assert_called_once_with("RGB", (100, 100))
@@ -399,19 +402,19 @@ class TestAIVision:
 
     def test_add_watermark_to_image_font_error(self, library, mock_image):
         """Test add_watermark_to_image method with font error"""
-        with patch('AIVision.ImageFont.truetype', side_effect=Exception("Font error")):
+        with patch('AIVision.library.ImageFont.truetype', side_effect=Exception("Font error")):
             with pytest.raises(AssertionError) as exc:
-                AIVision.add_watermark_to_image(mock_image, "Watermark")
+                library.add_watermark_to_image(mock_image, "Watermark")
 
             assert "Could not set watermark font" in str(exc.value)
             assert "Font error" in str(exc.value)
 
     def test_add_watermark_to_image_creation_error(self, library, mock_image):
         """Test add_watermark_to_image method with watermark creation error"""
-        with patch('AIVision.ImageFont.truetype', return_value=MagicMock()):
-            with patch('AIVision.Image.new', side_effect=Exception("Watermark error")):
+        with patch('AIVision.library.ImageFont.truetype', return_value=MagicMock()):
+            with patch('AIVision.library.Image.new', side_effect=Exception("Watermark error")):
                 with pytest.raises(AssertionError) as exc:
-                    AIVision.add_watermark_to_image(mock_image, "Watermark")
+                    library.add_watermark_to_image(mock_image, "Watermark")
 
                 assert "Could not create watermark" in str(exc.value)
                 assert "Watermark error" in str(exc.value)
@@ -420,7 +423,7 @@ class TestAIVision:
         """Test _assert_result method with passing result"""
         mock_genai.extract_result_and_explanation_from_response.return_value = ("pass", "Test passed successfully")
 
-        AIVision._assert_result("AI Response")
+        library._assert_result("AI Response")
 
         mock_genai.extract_result_and_explanation_from_response.assert_called_once_with("AI Response")
         mock_logger.info.assert_called_once_with("Verification passed:\nTest passed successfully")
@@ -430,7 +433,7 @@ class TestAIVision:
         mock_genai.extract_result_and_explanation_from_response.return_value = ("fail", "Test failed")
 
         with pytest.raises(AssertionError) as exc:
-            AIVision._assert_result("AI Response")
+            library._assert_result("AI Response")
 
         mock_genai.extract_result_and_explanation_from_response.assert_called_once_with("AI Response")
         assert str(exc.value) == "Verification failed:\nTest failed"
@@ -440,16 +443,16 @@ class TestAIVision:
         mock_genai.extract_result_and_explanation_from_response.return_value = (None, "No result")
 
         with pytest.raises(AssertionError) as exc:
-            AIVision._assert_result("AI Response")
+            library._assert_result("AI Response")
 
         assert str(exc.value) == "Verification failed:\nNo result"
 
     def test_get_rf_output_dir_running(self):
         """Test _get_rf_output_dir function when Robot Framework is running"""
-        with patch('AIVision.BuiltIn') as mock_builtin:
+        with patch('AIVision.library.BuiltIn') as mock_builtin:
             mock_builtin.return_value.get_variable_value.return_value = "/robot/output"
 
-            from library import _get_rf_output_dir
+            from AIVision.library import _get_rf_output_dir
             result = _get_rf_output_dir()
 
             assert result == "/robot/output"
@@ -457,10 +460,10 @@ class TestAIVision:
 
     def test_get_rf_output_dir_not_running(self):
         """Test _get_rf_output_dir function when Robot Framework is not running"""
-        with patch('AIVision.BuiltIn') as mock_builtin:
+        with patch('AIVision.library.BuiltIn') as mock_builtin:
             mock_builtin.return_value.get_variable_value.side_effect = RobotNotRunningError("Not running")
-            with patch('AIVision.os.getcwd', return_value="/current/dir"):
-                from library import _get_rf_output_dir
+            with patch('AIVision.library.os.getcwd', return_value="/current/dir"):
+                from AIVision.library import _get_rf_output_dir
                 result = _get_rf_output_dir()
 
                 assert result == "/current/dir"
