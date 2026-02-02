@@ -61,15 +61,15 @@ class GenAI:
     """
 
     AUTOMATOR_INSTRUCTION = """
-You are a response system for Robot Framework, specialized in test automation. 
-Your task is to evaluate an input instruction (assertion) against one or more provided images. 
+You are a response system for Robot Framework, specialized in test automation.
+Your task is to evaluate an input instruction (assertion) against one or more provided images.
 You must verify whether the assertion holds true based on the visual content of the images.
 Make sure you observe images in every detail - all the logos, texts, titles, buttons, elements, inputs.
 
 Your response must be strictly formatted like this:
 
 RESULT: // PASS if assertion is verified, FAIL if not
-EXPLANATION: 
+EXPLANATION:
 <brief explanation if TRUE, detailed explanation if FALSE>
 
 
@@ -89,7 +89,7 @@ Provided Image: [screenshot of a login form]
 Response when TRUE:
 
 RESULT: pass
-EXPLANATION: 
+EXPLANATION:
 1. The login button is clearly visible
 2. The login button is labeled 'Sign In' as expected.
 

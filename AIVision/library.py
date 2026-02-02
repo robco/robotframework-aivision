@@ -119,7 +119,7 @@ class AIVision:
                 logger.warn(f"Could not create combined image: {e}")
 
         instructions = """First image is showing actual application view.
-Second image is reference design template. 
+Second image is reference design template.
 Verify screenshot matches look and feel template. Pay attention to details, design is important.
 Make sure to check also all the visible logos, titles, labels, spelling, texts, links, menus, banners
 and any available graphics. Always doublecheck the reference image in case you think some
