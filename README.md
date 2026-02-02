@@ -1,3 +1,5 @@
+[![Python Package CI](https://github.com/robco/robotframework-aivision/actions/workflows/python-package.yml/badge.svg)](https://github.com/robco/robotframework-aivision/actions/workflows/python-package.yml)
+
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/robco)
 # Robot Framework AI Vision Library
 
