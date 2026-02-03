@@ -15,6 +15,10 @@ The main keyword (`Verify That`) expects the model to return a strict `RESULT:` 
 - Configurable AI system prompt for enforcing response format and verification behavior.
 - Works with multiple providers via the `openai` Python client and OpenAI-compatible endpoints (`base_url`).
 
+## Keywords Documentation
+
+Keywords documentation can be found [here](https://robco.github.io/robotframework-aivision/).
+
 ## Installation
 
 **Install from PyPI (once published):**
