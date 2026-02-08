@@ -35,7 +35,11 @@ def test_verify_that(aivison_library):
     aivison_library.genai.generate_ai_response = MagicMock(return_value="response")
     aivison_library._assert_result = MagicMock()
     aivison_library.verify_that("path/to/image.png", "instructions")
-    aivison_library.genai.generate_ai_response.assert_called_once_with(instructions="Verify that: instructions", image_paths=["path/to/image.png"])
+    aivison_library.genai.generate_ai_response.assert_called_once_with(
+        instructions="Verify that: instructions",
+        image_paths=["path/to/image.png"],
+        attachment_paths=[]
+    )
     aivison_library._assert_result.assert_called_once_with("response")
 
 
@@ -81,4 +85,3 @@ def test_add_watermark_to_image(aivison_library):
     image = Image.new("RGB", (100, 100))
     watermarked_image = aivison_library.add_watermark_to_image(image, "Test Watermark")
     assert watermarked_image.size == (100, 100)
-

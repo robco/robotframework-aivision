@@ -10,6 +10,7 @@ The main keyword (`Verify That`) expects the model to return a strict `RESULT:` 
 ## Features
 
 - Visual assertions on one or more screenshots using natural-language instructions.
+- Optional non-image attachments (txt, pdf, source, log) included as context for assertions.
 - Template comparison keyword to validate “actual vs expected” look & feel (optionally creates a side-by-side image).
 - Image utilities built on Pillow: open/convert, watermark, combine images, auto-generate names, save into Robot Framework output directory.
 - Configurable AI system prompt for enforcing response format and verification behavior.
@@ -98,7 +99,7 @@ All keywords below are implemented in `AIVision` and are available after importi
 
 | Keyword | Purpose |
 |---|---|
-| `Verify That` | Send one or more screenshots + instructions to the model, parse the `RESULT` and raise `AssertionError` on failure. |
+| `Verify That` | Send one or more screenshots and/or file attachments with instructions to the model, parse the `RESULT` and raise `AssertionError` on failure. |
 | `Verify Screenshot Matches Look And Feel Template` | Compare a screenshot against a reference template with a built-in instruction set; optional combined image creation. |
 | `Open Image` | Open an image (and optionally convert mode, default `RGB`). |
 | `Save Image` | Save a PIL image to a path (defaults to RF output directory) with optional watermark. |
@@ -119,6 +120,20 @@ Library  AIVision  platform=Ollama
 Login button is correct
    Verify That  ${CURDIR}/screens/login.png  Login button is visible and labeled as 'Sign In'
 ```
+
+### Visual assertion with attachments
+
+```robotframework
+*** Settings ***
+Library  AIVision
+
+*** Test Cases ***
+UI matches log output
+   @{files}  =  Create List  ${CURDIR}/screens/home.png  ${CURDIR}/logs/ui.log
+   Verify That  ${files}  The log mentions the same banner text shown on the page.
+```
+
+Note: For PDF attachments, the library will extract text using `PyMuPDF` (fitz). If no text is found and a vision model is in use, it will try to render PDF pages as images using `PyMuPDF` (fitz); otherwise the PDF is included as base64 text. All other non-image attachments are read as text by default (including unknown extensions).
 
 ### Compare screenshot to design template
 

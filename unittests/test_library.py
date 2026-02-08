@@ -99,7 +99,8 @@ class TestAIVision:
 
         mock_genai.generate_ai_response.assert_called_once_with(
             instructions="Verify that: Contains green logo in top right corner",
-            image_paths=["/path/to/image.png"]
+            image_paths=["/path/to/image.png"],
+            attachment_paths=[]
         )
         mock_logger.debug.assert_called_once_with("AI Response")
         mock_genai.extract_result_and_explanation_from_response.assert_called_once_with("AI Response")
@@ -112,7 +113,30 @@ class TestAIVision:
 
         mock_genai.generate_ai_response.assert_called_once_with(
             instructions="Verify that: Compare these images",
-            image_paths=image_paths
+            image_paths=image_paths,
+            attachment_paths=[]
+        )
+
+    def test_verify_that_with_attachments(self, library, mock_genai):
+        """Test verify_that method with image and attachment paths"""
+        paths = ["/path/to/image.png", "/path/to/test.log"]
+        library.verify_that(paths, "Log references the element shown in the image")
+
+        mock_genai.generate_ai_response.assert_called_once_with(
+            instructions="Verify that: Log references the element shown in the image",
+            image_paths=["/path/to/image.png"],
+            attachment_paths=["/path/to/test.log"]
+        )
+
+    def test_verify_that_only_attachments(self, library, mock_genai):
+        """Test verify_that method with only attachment paths"""
+        paths = ["/path/to/output.txt"]
+        library.verify_that(paths, "File contains expected error text")
+
+        mock_genai.generate_ai_response.assert_called_once_with(
+            instructions="Verify that: File contains expected error text",
+            image_paths=[],
+            attachment_paths=["/path/to/output.txt"]
         )
 
     def test_verify_that_fail(self, library, mock_genai, mock_logger):
@@ -123,6 +147,13 @@ class TestAIVision:
             library.verify_that("/path/to/image.png", "Contains green logo in top right corner")
 
         assert str(exc.value) == "Verification failed:\nTest failed"
+
+    def test_verify_that_invalid_paths_type(self, library):
+        """Test verify_that method with invalid file_paths type"""
+        with pytest.raises(ValueError) as exc:
+            library.verify_that(123, "Invalid input")
+
+        assert str(exc.value) == "file_paths must be a path or list of paths"
 
     def test_verify_screenshot_matches_look_and_feel_template(self, library, mock_genai, mock_logger):
         """Test verify_screenshot_matches_look_and_feel_template method"""

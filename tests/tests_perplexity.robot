@@ -18,3 +18,4 @@ Check screenshots are from Wikipedia
 
 Check Wikipedia main page corresponds to the template
    Verify Screenshot Matches Look And Feel Template  ${ACTUAL}  ${REFERENCE}
+

@@ -52,5 +52,5 @@ setup(name='robotframework_aivision',
       license=license(),
       packages=find_packages(),
       package_data={'': ['font/*']},
-      install_requires=['robotframework', 'pillow', 'openai']
+      install_requires=['robotframework', 'pillow', 'openai', 'PyMuPDF']
       )

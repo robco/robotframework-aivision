@@ -24,6 +24,7 @@ from .platforms import Platforms
 from openai import OpenAI
 import os
 import base64
+from .attachments import AttachmentProcessor
 
 
 class AIPlatform:
@@ -62,8 +63,10 @@ class GenAI:
 
     AUTOMATOR_INSTRUCTION = """
 You are a response system for Robot Framework, specialized in test automation.
-Your task is to evaluate an input instruction (assertion) against one or more provided images.
-You must verify whether the assertion holds true based on the visual content of the images.
+Your task is to evaluate an input instruction (assertion) against one or more provided images
+and any provided file attachments (text, logs, source code, PDFs).
+You must verify whether the assertion holds true based on the visual content of the images
+and the contents of any attachments.
 Make sure you observe images in every detail - all the logos, texts, titles, buttons, elements, inputs.
 
 Your response must be strictly formatted like this:
@@ -104,7 +107,6 @@ EXPLANATION:
 
 Ensure no other text is provided in the response.
     """
-
     def __init__(self, platform: Platforms = Platforms.Ollama, base_url: str = None,
                  api_key: str = None, model: str = None, image_detail: str = None,
                  simple_response: bool = True, initialize: bool = True,
@@ -137,6 +139,7 @@ Ensure no other text is provided in the response.
             model=model,
             image_detail=image_detail
         )
+        self.attachments = AttachmentProcessor(supports_vision=self.ai_platform.supports_vision)
 
         if initialize:
             self.initialize_genai(ai_platform=self.ai_platform)
@@ -161,19 +164,21 @@ Ensure no other text is provided in the response.
         )
 
         self.ai_platform = ai_platform
+        self.attachments = AttachmentProcessor(supports_vision=self.ai_platform.supports_vision)
 
-    def generate_ai_response(self, instructions: str, image_paths: list):
+    def generate_ai_response(self, instructions: str, image_paths: list, attachment_paths: list = None):
         """
         Generate AI response for test automation assertions with images.
 
         Args:
             instructions: Test assertion instructions
             image_paths: List of image file paths to analyze
+            attachment_paths: Optional list of non-image file paths to analyze
 
         Returns:
             AI-generated response
         """
-        prompt = self._prepare_prompt(instructions, image_paths)
+        prompt = self._prepare_prompt(instructions, image_paths, attachment_paths)
         return self.chat_completion(prompt)
 
     def chat_completion(self, messages):
@@ -206,13 +211,14 @@ Ensure no other text is provided in the response.
         except Exception as e:
             raise Exception(f"Error during chat completion: {str(e)}")
 
-    def _prepare_prompt(self, instruction: str, image_paths: list = None):
+    def _prepare_prompt(self, instruction: str, image_paths: list = None, attachment_paths: list = None):
         """
         Prepare prompt with instructions and images for test automation.
 
         Args:
             instruction: Test instruction/assertion
             image_paths: List of image file paths
+            attachment_paths: Optional list of non-image file paths
 
         Returns:
             Formatted prompt as list of messages
@@ -238,6 +244,14 @@ Ensure no other text is provided in the response.
                     "type": "image",
                     "image_path": img_path
                 })
+
+        # Add non-image attachments as text blocks
+        if attachment_paths:
+            for attachment_path in attachment_paths:
+                if not os.path.isfile(attachment_path):
+                    raise FileNotFoundError(f"Attachment not found: {attachment_path}")
+
+                content.extend(self.attachments.prepare_attachment_content(attachment_path))
 
         return [{"role": "user", "content": content}]
 
@@ -309,6 +323,7 @@ Ensure no other text is provided in the response.
         mime_type = mime_types.get(ext, 'image/png')
 
         return f"data:{mime_type};base64,{image_data}"
+
 
     @staticmethod
     def extract_result_and_explanation_from_response(response: str):

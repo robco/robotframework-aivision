@@ -67,14 +67,19 @@ class AIVision:
         self.OUTPUT_DIR = _get_rf_output_dir()
 
     @keyword
-    def verify_that(self, screenshot_paths, instructions):
-        """Verifies that the image matches the instructions
+    def verify_that(self, file_paths, instructions):
+        """Verifies that the provided files match the instructions
 
         Input parameters:
 
-        ``image_path``: (required) Path(s) to the image. Can be a single path or a list of paths
+        ``file_paths``: (required) Path(s) to images or other files. Can be a single path or a list of paths
 
         ``instructions``: (required) Instructions to be verified
+
+        Notes:
+        - Non-image attachments are read as text by default (including unknown extensions).
+        - PDFs are parsed for text using PyMuPDF (fitz); if no text is found and a vision model is used,
+          the library attempts to render PDF pages as images using PyMuPDF (fitz).
 
         *Examples*:
 
@@ -82,12 +87,47 @@ class AIVision:
 
         | @{img_paths}  = | Create List | /path/to/image1.png | /path/to/image2.png |
         | Verify That | ${img_paths} | First image contains logo as referenced on 2nd image. |
+
+        | @{files}  = | Create List | /path/to/image.png | /path/to/log.txt |
+        | Verify That | ${files} | The log mentions the element shown in the image. |
         """
-        screenshot_paths = [screenshot_paths] if isinstance(screenshot_paths, str) else screenshot_paths
-        response = self.genai.generate_ai_response(instructions=f"Verify that: {instructions}", image_paths=screenshot_paths)
+        paths = self._normalize_paths(file_paths)
+        image_paths, attachment_paths = self._split_image_and_attachment_paths(paths)
+
+        response = self.genai.generate_ai_response(
+            instructions=f"Verify that: {instructions}",
+            image_paths=image_paths,
+            attachment_paths=attachment_paths
+        )
         logger.debug(response)
 
         self._assert_result(response)
+
+    @staticmethod
+    def _normalize_paths(paths):
+        if isinstance(paths, (str, os.PathLike)):
+            return [os.fspath(paths)]
+        if isinstance(paths, (list, tuple)):
+            return [os.fspath(p) for p in paths]
+        raise ValueError("file_paths must be a path or list of paths")
+
+    @staticmethod
+    def _split_image_and_attachment_paths(paths):
+        image_paths = []
+        attachment_paths = []
+        for path in paths:
+            if AIVision._is_image_path(path):
+                image_paths.append(path)
+            else:
+                attachment_paths.append(path)
+        return image_paths, attachment_paths
+
+    @staticmethod
+    def _is_image_path(path):
+        ext = os.path.splitext(path)[1].lower()
+        return ext in {
+            ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".tiff", ".tif"
+        }
 
     @keyword
     def verify_screenshot_matches_look_and_feel_template(self, screenshot_path, template_path,
