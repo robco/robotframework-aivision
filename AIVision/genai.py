@@ -107,6 +107,7 @@ EXPLANATION:
 
 Ensure no other text is provided in the response.
     """
+
     def __init__(self, platform: Platforms = Platforms.Ollama, base_url: str = None,
                  api_key: str = None, model: str = None, image_detail: str = None,
                  simple_response: bool = True, initialize: bool = True,
@@ -323,7 +324,6 @@ Ensure no other text is provided in the response.
         mime_type = mime_types.get(ext, 'image/png')
 
         return f"data:{mime_type};base64,{image_data}"
-
 
     @staticmethod
     def extract_result_and_explanation_from_response(response: str):
