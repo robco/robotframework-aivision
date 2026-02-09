@@ -1,3 +1,4 @@
+1.1.2,   2026-02-09 -- Improved debug logging
 1.1.1,   2026-02-09 -- Pass/Fail AI response optimized
 1.1.0,   2026-02-08 -- Added support for (text) files attachments
 1.0.0,   2026-02-02 -- Release v1.0
