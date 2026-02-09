@@ -35,10 +35,16 @@ def license():
 
 def readme():
     changes_title = '\n\nVersion history\n----------------\n\n'
+    formatted_changes = []
 
-    with open('README.md') as r:
-        with open('CHANGES.txt') as ch:
-            return r.read() + changes_title + ch.read()
+    with open('CHANGES.txt', 'r') as ch:
+        for line in ch:
+            stripped_line = line.strip()
+            if stripped_line:
+                formatted_changes.append(f'- {stripped_line}')
+
+    with open('README.md', 'r') as r:
+        return r.read() + changes_title + '\n'.join(formatted_changes) + '\n'
 
 
 setup(name='robotframework_aivision',
