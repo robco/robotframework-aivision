@@ -1,4 +1,5 @@
-1.1.0,   2026-02-02 -- Added support for (text) files attachments
+1.1.1,   2026-02-09 -- Pass/Fail AI response optimized
+1.1.0,   2026-02-08 -- Added support for (text) files attachments
 1.0.0,   2026-02-02 -- Release v1.0
 0.2.0a1, 2026-02-02 -- Alpha1 version
 0.2.0,   2026-01-29 -- AI System Prompt is configurable
