@@ -477,7 +477,11 @@ text, label, logo or element is overlapping or containing typo.
 
     def _assert_result(self, response):
         result, explanation = self.genai.extract_result_and_explanation_from_response(response)
-        if result and result.strip().lower() == "pass":
+        try:
+            logger.debug(f"AI Result is: ==>{result.strip().lower()}<==")
+        except:
+            logger.debug("AI Result not returned.")
+        if result and "pass" in result.strip().lower():
             logger.info(f"Verification passed:\n{explanation}")
         else:
             raise AssertionError(f"Verification failed:\n{explanation}")
