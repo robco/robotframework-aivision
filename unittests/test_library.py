@@ -102,7 +102,9 @@ class TestAIVision:
             image_paths=["/path/to/image.png"],
             attachment_paths=[]
         )
-        mock_logger.debug.assert_called_once_with("AI Response")
+        mock_logger.debug.assert_any_call("AI Response")
+        mock_logger.debug.assert_any_call("AI Result is: ==>pass<==")
+        assert mock_logger.debug.call_count == 2
         mock_genai.extract_result_and_explanation_from_response.assert_called_once_with("AI Response")
         mock_logger.info.assert_called_once_with("Verification passed:\nTest passed")
 
