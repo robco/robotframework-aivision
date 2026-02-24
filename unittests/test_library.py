@@ -88,10 +88,19 @@ class TestAIVision:
                 platform=Platforms.Ollama,
                 model="test_model",
                 image_detail="high",
+                image_dpi=72,
                 simple_response=True,
                 initialize=True,
                 system_prompt=None
             )
+
+    def test_init_with_custom_image_dpi(self, mock_genai):
+        """Test initialization with custom image DPI"""
+        with patch('AIVision.library._get_rf_output_dir', return_value='/mock/output/dir'):
+            AIVision(api_key="test_key", image_dpi=144)
+
+            from AIVision.library import GenAI
+            assert GenAI.call_args[1]["image_dpi"] == 144
 
     def test_verify_that_single_path(self, library, mock_genai, mock_logger):
         """Test verify_that method with a single screenshot path"""
@@ -190,6 +199,40 @@ class TestAIVision:
 
             mock_genai.generate_ai_response.assert_called_once_with(
                 instructions="Custom instructions",
+                image_paths=["/path/to/screenshot.png", "/path/to/template.png"]
+            )
+
+    def test_verify_screenshot_matches_look_and_feel_template_with_additional_instructions(self, library, mock_genai):
+        """Test verify_screenshot_matches_look_and_feel_template method with additional instructions"""
+        with patch.object(library, 'combine_images_on_paths_side_by_side'):
+            library.verify_screenshot_matches_look_and_feel_template(
+                "/path/to/screenshot.png",
+                "/path/to/template.png",
+                additional_instructions="Ignore clock in header."
+            )
+
+            mock_genai.generate_ai_response.assert_called_once()
+            instructions = mock_genai.generate_ai_response.call_args[1]["instructions"]
+            assert "First image is showing actual application view" in instructions
+            assert instructions.endswith("Ignore clock in header.")
+            assert mock_genai.generate_ai_response.call_args[1]["image_paths"] == [
+                "/path/to/screenshot.png",
+                "/path/to/template.png",
+            ]
+
+    def test_verify_screenshot_matches_look_and_feel_template_with_override_and_additional_instructions(self, library,
+                                                                                                          mock_genai):
+        """Test verify_screenshot_matches_look_and_feel_template method with override and additional instructions"""
+        with patch.object(library, 'combine_images_on_paths_side_by_side'):
+            library.verify_screenshot_matches_look_and_feel_template(
+                "/path/to/screenshot.png",
+                "/path/to/template.png",
+                override_instructions="Custom instructions",
+                additional_instructions="Focus on button colors."
+            )
+
+            mock_genai.generate_ai_response.assert_called_once_with(
+                instructions="Custom instructions Focus on button colors.",
                 image_paths=["/path/to/screenshot.png", "/path/to/template.png"]
             )
 
@@ -352,7 +395,8 @@ class TestAIVision:
                         mock_image,
                         watermark1="Watermark1",
                         watermark2="Watermark2",
-                        mode="RGB"
+                        mode="RGB",
+                        align=True
                     )
                     mock_save.assert_called_once_with(mock_image)
 
@@ -408,6 +452,22 @@ class TestAIVision:
 
             assert "Could not create combined image" in str(exc.value)
             assert "Combine error" in str(exc.value)
+
+    def test_combine_images_side_by_side_align_resizes_wider_image(self, library):
+        image1 = Image.new("RGB", (200, 100))
+        image2 = Image.new("RGB", (100, 100))
+
+        result = library.combine_images_side_by_side(image1, image2)
+
+        assert result.size == (201, 100)
+
+    def test_combine_images_side_by_side_align_disabled_keeps_original_widths(self, library):
+        image1 = Image.new("RGB", (200, 100))
+        image2 = Image.new("RGB", (100, 100))
+
+        result = library.combine_images_side_by_side(image1, image2, align=False)
+
+        assert result.size == (301, 100)
 
     def test_add_watermark_to_image(self, library, mock_image, mock_logger):
         """Test add_watermark_to_image method"""

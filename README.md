@@ -31,7 +31,7 @@ Runtime dependencies include Robot Framework, Pillow, and the `openai` Python cl
 
 ## Configuration
 
-Import the library in Robot Framework and choose a provider using `platform` plus optional overrides (`base_url`, `api_key`, `model`, `image_detail`).
+Import the library in Robot Framework and choose a provider using `platform` plus optional overrides (`base_url`, `api_key`, `model`, `image_detail`, `image_dpi`).
 
 ### Robot Framework import examples
 

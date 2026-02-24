@@ -22,6 +22,7 @@
 
 from AIVision.genai import GenAI
 from AIVision.attachments import AttachmentProcessor
+from unittest.mock import patch
 
 
 def test_prepare_prompt_includes_text_attachment(tmp_path):
@@ -97,3 +98,23 @@ def test_pdf_fallback_renders_images_when_no_text(tmp_path, monkeypatch):
 
     assert any("format: pdf images" in item["text"] for item in text_items)
     assert [item["image_path"] for item in image_items] == ["page1.png", "page2.png"]
+
+
+def test_format_messages_uses_default_image_dpi():
+    genai = GenAI(initialize=False)
+    messages = [{"role": "user", "content": [{"type": "image", "image_path": "/tmp/image.png"}]}]
+
+    with patch.object(GenAI, "_encode_image_to_base64", return_value="data:image/png;base64,abc") as mock_encode:
+        genai._format_messages_for_openai(messages)
+
+    mock_encode.assert_called_once_with("/tmp/image.png", dpi=72)
+
+
+def test_format_messages_uses_custom_image_dpi():
+    genai = GenAI(initialize=False, image_dpi=144)
+    messages = [{"role": "user", "content": [{"type": "image", "image_path": "/tmp/image.png"}]}]
+
+    with patch.object(GenAI, "_encode_image_to_base64", return_value="data:image/png;base64,abc") as mock_encode:
+        genai._format_messages_for_openai(messages)
+
+    mock_encode.assert_called_once_with("/tmp/image.png", dpi=144)

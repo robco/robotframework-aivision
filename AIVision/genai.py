@@ -24,15 +24,19 @@ from .platforms import Platforms
 from openai import OpenAI
 import os
 import base64
+from io import BytesIO
+from PIL import Image
 from .attachments import AttachmentProcessor
 
 
 class AIPlatform:
     """Configuration class for AI platform settings."""
     DEFAULT_IMG_DETAIL = "high"
+    DEFAULT_IMAGE_DPI = 72
 
     def __init__(self, platform: Platforms = None, base_url: str = None,
-                 api_key: str = None, model: str = None, image_detail: str = DEFAULT_IMG_DETAIL):
+                 api_key: str = None, model: str = None, image_detail: str = DEFAULT_IMG_DETAIL,
+                 image_dpi: int = DEFAULT_IMAGE_DPI):
         """
         Initialize AI platform configuration.
 
@@ -42,11 +46,13 @@ class AIPlatform:
             api_key: API key for authentication
             model: Model name (overrides platform default)
             image_detail: Image detail level for vision models
+            image_dpi: DPI used when encoding images for AI model attachments
         """
         self.platform = platform
         self.base_url = base_url or (platform.value["default_base_url"] if platform else None)
         self.model = model or (platform.value["default_model"] if platform else None)
         self.detail = image_detail
+        self.image_dpi = image_dpi
         self.api_key = api_key
         self.supports_vision = platform.value.get("supports_vision", False) if platform else False
 
@@ -110,7 +116,8 @@ Ensure no other text is provided in the response.
 
     def __init__(self, platform: Platforms = Platforms.Ollama, base_url: str = None,
                  api_key: str = None, model: str = None, image_detail: str = None,
-                 simple_response: bool = True, initialize: bool = True,
+                 image_dpi: int = AIPlatform.DEFAULT_IMAGE_DPI, simple_response: bool = True,
+                 initialize: bool = True,
                  system_prompt: str = AUTOMATOR_INSTRUCTION):
         """
         Initialize GenAI instance.
@@ -121,6 +128,7 @@ Ensure no other text is provided in the response.
             api_key: API key for authentication
             model: Model name to use
             image_detail: Detail level for image processing
+            image_dpi: DPI used when encoding images for AI model attachments
             simple_response: Return simplified responses
             initialize: Initialize client immediately
             system_prompt: Main AI System prompt specifying Gen AI behavior
@@ -138,7 +146,8 @@ Ensure no other text is provided in the response.
             base_url=base_url,
             api_key=api_key,
             model=model,
-            image_detail=image_detail
+            image_detail=image_detail,
+            image_dpi=image_dpi
         )
         self.attachments = AttachmentProcessor(supports_vision=self.ai_platform.supports_vision)
 
@@ -277,7 +286,10 @@ Ensure no other text is provided in the response.
                     # Convert image file to base64 data URI
                     image_path = item.get("image_path")
                     if image_path and self.ai_platform.supports_vision:
-                        image_data = self._encode_image_to_base64(image_path)
+                        image_data = self._encode_image_to_base64(
+                            image_path,
+                            dpi=self.ai_platform.image_dpi,
+                        )
                         formatted_content.append({
                             "type": "image_url",
                             "image_url": {
@@ -299,29 +311,57 @@ Ensure no other text is provided in the response.
         return formatted_messages
 
     @staticmethod
-    def _encode_image_to_base64(image_path: str) -> str:
+    def _encode_image_to_base64(image_path: str, dpi: int = AIPlatform.DEFAULT_IMAGE_DPI) -> str:
         """
         Encode image file to base64 data URI.
 
         Args:
             image_path: Path to image file
+            dpi: DPI value stored in the encoded image metadata
 
         Returns:
             Base64-encoded data URI string
         """
-        with open(image_path, "rb") as image_file:
-            image_data = base64.b64encode(image_file.read()).decode('utf-8')
-
-        # Detect image format from file extension
         ext = os.path.splitext(image_path)[1].lower()
         mime_types = {
             '.png': 'image/png',
             '.jpg': 'image/jpeg',
             '.jpeg': 'image/jpeg',
             '.gif': 'image/gif',
-            '.webp': 'image/webp'
+            '.webp': 'image/webp',
+            '.bmp': 'image/bmp',
+            '.tiff': 'image/tiff',
+            '.tif': 'image/tiff',
+        }
+        pil_formats = {
+            '.png': 'PNG',
+            '.jpg': 'JPEG',
+            '.jpeg': 'JPEG',
+            '.gif': 'GIF',
+            '.webp': 'WEBP',
+            '.bmp': 'BMP',
+            '.tiff': 'TIFF',
+            '.tif': 'TIFF',
         }
         mime_type = mime_types.get(ext, 'image/png')
+        pil_format = pil_formats.get(ext)
+
+        if pil_format:
+            try:
+                with Image.open(image_path) as image_file:
+                    image_to_save = image_file
+                    if pil_format == "JPEG" and image_file.mode not in ("L", "RGB"):
+                        image_to_save = image_file.convert("RGB")
+
+                    buffer = BytesIO()
+                    image_to_save.save(buffer, format=pil_format, dpi=(dpi, dpi))
+                    image_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
+                    return f"data:{mime_type};base64,{image_data}"
+            except Exception:
+                pass
+
+        with open(image_path, "rb") as image_file:
+            image_data = base64.b64encode(image_file.read()).decode('utf-8')
 
         return f"data:{mime_type};base64,{image_data}"
 
