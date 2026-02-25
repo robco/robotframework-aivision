@@ -86,7 +86,7 @@ The library defines these platform presets (model and `base_url`) which you can 
 
 | Platform | Default `base_url` | Default model | API key |
 |---|---|---|---|
-| Ollama | `http://localhost:11434/v1` | `qwen3-coder:480b-cloud` | Not required |
+| Ollama | `http://localhost:11434/v1` | `kimi-k2.5:cloud` | Not required |
 | DockerModel | `http://localhost:12434/engines/v1` | `ai/qwen3-vl:8B-Q8_K_XL` | Not required. |
 | OpenAI | `https://api.openai.com/v1` | `gpt-5.2` | Required. |
 | Perplexity | `https://api.perplexity.ai` | `sonar-pro` | Required. |
