@@ -52,6 +52,21 @@ def test_verify_screenshot_matches_look_and_feel_template(aivison_library):
         aivison_library._assert_result.assert_called_once_with("response")
 
 
+def test_verify_screenshot_matches_look_and_feel_template_with_additional_instructions(aivison_library):
+    aivison_library.genai.generate_ai_response = MagicMock(return_value="response")
+    aivison_library._assert_result = MagicMock()
+    with patch.object(aivison_library, 'combine_images_on_paths_side_by_side', return_value=None):
+        aivison_library.verify_screenshot_matches_look_and_feel_template(
+            "path/to/screenshot.png",
+            "path/to/template.png",
+            additional_instructions="Ignore status badge."
+        )
+        instructions = aivison_library.genai.generate_ai_response.call_args[1]["instructions"]
+        assert "First image is showing actual application view" in instructions
+        assert instructions.endswith("Ignore status badge.")
+        aivison_library._assert_result.assert_called_once_with("response")
+
+
 def test_open_image(aivison_library):
     with patch("PIL.Image.open", return_value=Image.new("RGB", (100, 100))):
         image = aivison_library.open_image("path/to/image.png")

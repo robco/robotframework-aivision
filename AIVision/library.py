@@ -58,11 +58,11 @@ class AIVision:
     OUTPUT_DIR = _get_rf_output_dir()
 
     def __init__(self, base_url: str = None, api_key: str = None, platform: Platforms = Platforms.Ollama,
-                 model: str = None, image_detail: str = None, simple_response: bool = True,
+                 model: str = None, image_detail: str = None, image_dpi: int = 72, simple_response: bool = True,
                  initialize: bool = True, system_prompt: str = None):
 
         self.genai = GenAI(base_url=base_url, api_key=api_key, platform=platform,
-                           model=model, image_detail=image_detail,
+                           model=model, image_detail=image_detail, image_dpi=image_dpi,
                            simple_response=simple_response, initialize=initialize, system_prompt=system_prompt)
         self.OUTPUT_DIR = _get_rf_output_dir()
 
@@ -132,6 +132,7 @@ class AIVision:
     @keyword
     def verify_screenshot_matches_look_and_feel_template(self, screenshot_path, template_path,
                                                          override_instructions: str = None,
+                                                         additional_instructions: str = None,
                                                          create_combined_image: bool = True):
         """Verifies that the screenshot matches the look and feel template
 
@@ -142,6 +143,9 @@ class AIVision:
         ``template_path``: (required) Path to the template image
 
         ``override_instructions``: (optional) If specified, it will override the built-in assertion instructions
+
+        ``additional_instructions``: (optional) If specified, additional user specified instructions will be added
+                                     to the system instructions
 
         ``create_combined_image``: (optional) default is _True_. If _True_, combined image will be created and saved
 
@@ -167,6 +171,10 @@ text, label, logo or element is overlapping or containing typo.
 """
         if override_instructions:
             instructions = override_instructions
+
+        if additional_instructions:
+            instructions = f"{instructions} {additional_instructions}"
+
         response = self.genai.generate_ai_response(
             instructions=instructions,
             image_paths=[screenshot_path, template_path])
@@ -320,7 +328,7 @@ text, label, logo or element is overlapping or containing typo.
 
     @keyword
     def combine_images_on_paths_side_by_side(self, image_path1, image_path2, watermark1=None, watermark2=None,
-                                             mode="RGB", save=True):
+                                             mode="RGB", save=True, align=True):
         """Combines two images specified by file path to one big image side-by-side
 
         Input parameters:
@@ -335,6 +343,9 @@ text, label, logo or element is overlapping or containing typo.
 
         ``mode``: (optional) default is _RGB_.
 
+        ``align``: (optional) default is _True_.
+                    If _True_, the wider image is resized to match the narrower image width.
+
         _Return Value_ is combined image as PIL Image format
 
         *Examples*:
@@ -346,7 +357,7 @@ text, label, logo or element is overlapping or containing typo.
         img2 = self.open_image(image_path2, mode=mode)
 
         combined_img = self.combine_images_side_by_side(img1, img2, watermark1=watermark1, watermark2=watermark2,
-                                                        mode=mode)
+                                                        mode=mode, align=align)
 
         if save:
             self.save_image(combined_img)
@@ -356,7 +367,7 @@ text, label, logo or element is overlapping or containing typo.
     # pylint: disable=too-many-arguments,too-many-positional-arguments
     @keyword
     def combine_images_side_by_side(
-            self, image1, image2, watermark1=None, watermark2=None, mode="RGB"
+            self, image1, image2, watermark1=None, watermark2=None, mode="RGB", align=True
     ):
         """Combines two images to one big image side-by-side
 
@@ -376,6 +387,9 @@ text, label, logo or element is overlapping or containing typo.
                   Supported modes can be seen
                   [https://pillow.readthedocs.io/en/3.0.x/handbook/concepts.html#modes|here].
 
+        ``align``: (optional) default is _True_.
+                    If _True_, the wider image is resized to match the narrower image width.
+
         _Return Value_ is combined image as PIL Image format
 
         *Examples*:
@@ -383,6 +397,21 @@ text, label, logo or element is overlapping or containing typo.
         | ${image} = | Combine Images Side By Side | ${image1} | ${image2} |RGBA |
         """
         try:
+            if align and image1.size[0] != image2.size[0]:
+                target_width = min(image1.size[0], image2.size[0])
+                resample = Image.Resampling.LANCZOS if hasattr(Image, "Resampling") else Image.LANCZOS
+
+                if image1.size[0] > target_width:
+                    image1 = image1.resize(
+                        (target_width, max(1, int(image1.size[1] * (target_width / image1.size[0])))),
+                        resample=resample,
+                    )
+                else:
+                    image2 = image2.resize(
+                        (target_width, max(1, int(image2.size[1] * (target_width / image2.size[0])))),
+                        resample=resample,
+                    )
+
             # Create empty image for both images to fit
             combined_image = Image.new(
                 mode,
