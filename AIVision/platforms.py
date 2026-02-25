@@ -26,7 +26,7 @@ from enum import Enum
 class Platforms(Enum):
     """Enum defining supported AI platforms with their default configurations."""
     Ollama = {
-        "default_model": "qwen3-coder:480b-cloud",
+        "default_model": "kimi-k2.5:cloud",
         "default_base_url": "http://localhost:11434/v1",
         "api_key_required": False,
         "supports_vision": True
