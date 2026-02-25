@@ -100,7 +100,7 @@ All keywords below are implemented in `AIVision` and are available after importi
 | Keyword | Purpose |
 |---|---|
 | `Verify That` | Send one or more screenshots and/or file attachments with instructions to the model, parse the `RESULT` and raise `AssertionError` on failure. |
-| `Verify Screenshot Matches Look And Feel Template` | Compare a screenshot against a reference template with a built-in instruction set; optional combined image creation. |
+| `Verify Screenshot Matches Look And Feel Template` | Compare a screenshot against a reference template with built-in instructions, optional `override_instructions`, optional `additional_instructions`, and optional combined image creation. |
 | `Open Image` | Open an image (and optionally convert mode, default `RGB`). |
 | `Save Image` | Save a PIL image to a path (defaults to RF output directory) with optional watermark. |
 | `Generate Image Name` | Create a unique timestamp-based filename with prefix/extension. |
@@ -161,3 +161,19 @@ Home page matches template - custom rules
    ...  ${CURDIR}/templates/home_expected.png
    ...  override_instructions=Verify layout, spacing, typography, and brand colors match the template exactly.
 ```
+
+### Add additional template instructions
+
+```robotframework
+*** Settings ***
+Library  AIVision
+
+*** Test Cases ***
+Home page matches template - ignore dynamic parts
+   Verify Screenshot Matches Look And Feel Template
+   ...  ${CURDIR}/screens/home_actual.png
+   ...  ${CURDIR}/templates/home_expected.png
+   ...  additional_instructions=Ignore the live clock and rotating promotional banner.
+```
+
+`additional_instructions` is appended to the default template checks (or to `override_instructions` if you provide both).
