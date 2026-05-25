@@ -183,7 +183,7 @@ class TestAIVision:
             )
 
             mock_genai.generate_ai_response.assert_called_once()
-            assert "First image is showing actual application screenshot" in mock_genai.generate_ai_response.call_args[1][
+            assert "First image is the actual application screenshot" in mock_genai.generate_ai_response.call_args[1][
                 'instructions']
             assert mock_genai.generate_ai_response.call_args[1]['image_paths'] == ["/path/to/screenshot.png",
                                                                                    "/path/to/template.png"]
@@ -213,7 +213,7 @@ class TestAIVision:
 
             mock_genai.generate_ai_response.assert_called_once()
             instructions = mock_genai.generate_ai_response.call_args[1]["instructions"]
-            assert "First image is showing actual application screenshot" in instructions
+            assert "First image is the actual application screenshot" in instructions
             assert instructions.endswith("All expected elements are present and visually usable.")
             assert mock_genai.generate_ai_response.call_args[1]["image_paths"] == [
                 "/path/to/screenshot.png",
