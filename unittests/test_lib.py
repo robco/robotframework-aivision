@@ -62,8 +62,8 @@ def test_verify_screenshot_matches_look_and_feel_template_with_additional_instru
             additional_instructions="Ignore status badge."
         )
         instructions = aivison_library.genai.generate_ai_response.call_args[1]["instructions"]
-        assert "First image is showing actual application view" in instructions
-        assert instructions.endswith("Ignore status badge.")
+        assert "First image is showing actual application screenshot" in instructions
+        assert instructions.endswith("All expected elements are present and visually usable.")
         aivison_library._assert_result.assert_called_once_with("response")
 
 
