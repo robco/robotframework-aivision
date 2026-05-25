@@ -162,12 +162,57 @@ class AIVision:
             except Exception as e:
                 logger.warn(f"Could not create combined image: {e}")
 
-        instructions = """First image is showing actual application view.
-Second image is reference design template.
-Verify screenshot matches look and feel template. Pay attention to details, design is important.
-Make sure to check also all the visible logos, titles, labels, spelling, texts, links, menus, banners
-and any available graphics. Always doublecheck the reference image in case you think some
-text, label, logo or element is overlapping or containing typo.
+        instructions = """
+First image is the actual application screenshot.
+Second image is the reference design/template screenshot.
+
+Compare the actual screenshot against the reference screenshot as a visual UI/template validation.
+
+Primary goal:
+Verify that the actual page matches the reference page in layout, visual structure, branding, and look-and-feel.
+
+Check carefully:
+- Overall page structure and visual hierarchy
+- Header, navigation, menu icons, logos, brand marks, and banners
+- Sections, cards, panels, containers, borders, backgrounds, shadows, and spacing
+- Buttons, links, icons, badges, dropdowns, input fields, and other interactive elements
+- Element positions, alignment, relative sizing, padding, margins, and grouping
+- Font style, font weight, approximate font size, text alignment, and color usage
+- Overlapping, clipped, truncated, hidden, misplaced, or visually broken elements
+- Unexpected wrapping, excessive spacing, missing spacing, or layout shifts
+- Whether all expected visible UI elements are present
+
+Important text comparison rules:
+Do not compare dynamic text values literally. Values such as phone numbers, account numbers, names, balances, prices, dates, times, counts, statuses, identifiers, and user-specific data may be different and must not cause failure.
+
+Treat dynamic text as visual text blocks:
+- The exact value may differ.
+- The text block should still appear in the expected location.
+- It should have similar styling, size, alignment, color, and visual weight.
+- It should not break the layout, overlap other elements, be clipped, or cause unexpected wrapping.
+
+Static/template text rules:
+Static labels, headings, menu names, fixed links, fixed button labels, fixed section names, and fixed instructional texts should be checked only when they are clearly part of the template.
+However, do not fail only because the actual text content differs if the difference appears to be dynamic or user-specific.
+
+Ignore:
+- Browser chrome, OS status bars, emulator/device frames, address bars, scroll bars, timestamps, debug overlays, and comparison labels such as "Actual" or "Expected", unless they are part of the application UI.
+- Minor anti-aliasing differences, screenshot compression artifacts, tiny pixel-level shifts, and insignificant rendering differences.
+- Small differences caused by platform/browser font rendering if the layout and visual hierarchy remain correct.
+
+Fail the comparison when:
+- A required UI element is missing or an unexpected major UI element is present.
+- Logo, header, menu, navigation, main section, card, button, link, or icon is visually incorrect or misplaced.
+- Layout structure differs significantly from the reference.
+- Elements overlap, are clipped, truncated, hidden, or visually broken.
+- Text blocks are present but their placement, style, size, color, or wrapping materially differs from the reference.
+- Spacing, alignment, sizing, or visual hierarchy is noticeably inconsistent with the reference.
+- The page looks like a different template, broken responsive layout, or incorrect design version.
+
+Pass the comparison when:
+- The actual screenshot preserves the same layout, structure, visual hierarchy, branding, and front-end appearance as the reference.
+- Differences are limited to dynamic text values or insignificant rendering variations.
+- All expected elements are present and visually usable.
 """
         if override_instructions:
             instructions = override_instructions
