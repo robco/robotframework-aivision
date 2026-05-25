@@ -1,3 +1,4 @@
+1.3.0,   2026-05-25 -- Look and Feel layout comparison assertion strategy improved and made more robust
 1.2.0,   2026-02-24 -- Image size optimizations, additional_instructions can now be passed to look and feel check keyword
 1.1.2,   2026-02-09 -- Improved debug logging
 1.1.1,   2026-02-09 -- Pass/Fail AI response optimized

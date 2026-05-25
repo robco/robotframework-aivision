@@ -130,7 +130,7 @@ jobs:
         
         # Run tests with multiple output formats
         python -m pytest unittests/ \
-          --cov=epg_grabber \
+          --cov=AIVision \
           --cov-report=xml \
           --cov-report=html \
           --cov-report=term-missing \
